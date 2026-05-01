@@ -1,0 +1,59 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# =========================
+# Virtual environment
+# =========================
+venv/
+env/
+.env/
+.venv/
+
+# =========================
+# Django
+# =========================
+*.log
+db.sqlite3
+/media/
+staticfiles/
+static/
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.local
+.env.*.local
+
+# =========================
+# IDE / editors
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# =========================
+# Testing / coverage
+# =========================
+.coverage
+htmlcov/
+.pytest_cache/
+
+# =========================
+# Django static / collectstatic
+# =========================
+/staticfiles/
+
+# =========================
+# mypy / type checking
+# =========================
+.mypy_cache/
+.dmypy.json

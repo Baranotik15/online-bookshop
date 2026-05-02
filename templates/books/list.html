@@ -1,0 +1,15 @@
+<h1>📚 Book Shop</h1>
+
+{% for book in books %}
+    <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+        <h2>{{ book.title }}</h2>
+
+        <p>
+            Author:
+            {{ book.author.first_name }}
+            {{ book.author.last_name }}
+        </p>
+
+        <p>Price: {{ book.price }}</p>
+    </div>
+{% endfor %}

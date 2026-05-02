@@ -1,15 +1,32 @@
-<h1>📚 Book Shop</h1>
+{% extends "base.html" %}
 
-{% for book in books %}
-    <div style="border:1px solid #ccc; padding:10px; margin:10px;">
-        <h2>{{ book.title }}</h2>
+{% block title %}Книги — BookShop{% endblock %}
 
-        <p>
-            Author:
-            {{ book.author.first_name }}
-            {{ book.author.last_name }}
-        </p>
+{% block content %}
+<div class="page-heading">
+    <h1>Каталог книг</h1>
+    <span class="count">{{ books|length }} книг</span>
+</div>
 
-        <p>Price: {{ book.price }}</p>
+<div class="book-grid">
+    {% for book in books %}
+    <div class="book-card">
+        <div class="book-cover">
+            {% if book.image %}
+                <img src="{{ book.image.url }}" alt="{{ book.title }}">
+            {% else %}
+                <span class="no-cover">📖</span>
+            {% endif %}
+        </div>
+        <div class="book-info">
+            <div class="book-title">{{ book.title }}</div>
+            <div class="book-author">{{ book.author.first_name }} {{ book.author.last_name }}</div>
+            <div class="book-price">{{ book.price }} ₴</div>
+        </div>
+        <a href="/books/{{ book.pk }}/" class="btn-primary">Детальніше</a>
     </div>
-{% endfor %}
+    {% empty %}
+    <p style="color: var(--muted); grid-column: 1/-1;">Книги не знайдено.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,10 +1,12 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-from .models import Order
-from .serializers import OrderSerializer
+
+from orders.models import Order
+from orders.serializers import OrderSerializer
 
 
 class OrderViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
     serializer_class = OrderSerializer
 
     def get_queryset(self):

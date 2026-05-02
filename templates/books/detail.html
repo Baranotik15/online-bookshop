@@ -1,11 +1,45 @@
-<h1>{{ book.title }}</h1>
+{% extends "base.html" %}
 
-<p>
-Author:
-{{ book.author.first_name }}
-{{ book.author.last_name }}
-</p>
+{% block title %}{{ book.title }} — BookShop{% endblock %}
 
-<p>{{ book.description }}</p>
-<p>Price: {{ book.price }}</p>
-<p>Stock: {{ book.stock }}</p>
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Головна</a>
+    <span class="sep">/</span>
+    <span>{{ book.title }}</span>
+</div>
+
+<div class="detail-grid">
+    <div class="detail-cover">
+        {% if book.image %}
+            <img src="{{ book.image.url }}" alt="{{ book.title }}">
+        {% else %}
+            <span class="no-cover">📖</span>
+        {% endif %}
+    </div>
+
+    <div class="detail-info">
+        <h1>{{ book.title }}</h1>
+
+        <div class="detail-author">
+            Автор: <a href="#">{{ book.author.first_name }} {{ book.author.last_name }}</a>
+        </div>
+
+        <div class="detail-price">{{ book.price }} ₴</div>
+
+        {% if book.stock > 0 %}
+            <span class="stock-badge in-stock">&#10003; В наявності ({{ book.stock }} шт.)</span>
+        {% else %}
+            <span class="stock-badge out-of-stock">&#10007; Немає в наявності</span>
+        {% endif %}
+
+        {% if book.description %}
+        <div class="detail-description">{{ book.description }}</div>
+        {% endif %}
+
+        {% if book.stock > 0 %}
+        <a href="#" class="btn-buy">До кошика</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

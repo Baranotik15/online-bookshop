@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cartCount) cartCount.textContent = n;
     }
 
+    if (cartCount) {
+        fetch('/api/cart/')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => { if (data) updateCartCount(data.items.length); })
+            .catch(() => {});
+    }
+
     function getCookie(name) {
         const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : null;
@@ -97,14 +104,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tw.startsWith(qw)) { best = Math.max(best, 85); continue; }
                 if (tw.includes(qw))   { best = Math.max(best, 70); continue; }
 
-                // Повний levenshtein між словами
                 const dist = levenshtein(qw, tw);
                 const maxDist = Math.max(qw.length, tw.length) <= 4 ? 1
                               : Math.max(qw.length, tw.length) <= 7 ? 2
                               : 3;
                 if (dist <= maxDist) best = Math.max(best, Math.max(10, 65 - dist * 15));
 
-                // Порівняння підрядка: чи збігається початок tw з qw з похибкою
                 if (qw.length >= 3) {
                     const sub = tw.slice(0, qw.length);
                     const subDist = levenshtein(qw, sub);

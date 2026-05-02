@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Кошик — BookShop{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+    <div class="cart-card">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+            <h1 class="auth-title" style="margin-bottom:0;">Кошик</h1>
+            <a href="/" style="font-size:.85rem; color:var(--muted); text-decoration:none;">← До каталогу</a>
+        </div>
+
+        {% if items %}
+        <div class="cart-items" id="cartItems">
+            {% for item in items %}
+            <div class="cart-item-row" id="cartRow-{{ item.id }}">
+                <div class="cart-item-info">
+                    <div class="cart-item-title">{{ item.book.title }}</div>
+                    <div class="cart-item-author">{{ item.book.author }}</div>
+                </div>
+                <div class="cart-item-qty">× {{ item.quantity }}</div>
+                <div class="cart-item-price">{{ item.book.price }} ₴</div>
+                <div class="cart-item-subtotal">{{ item.subtotal }} ₴</div>
+                <button class="cart-remove-btn" data-item-id="{{ item.id }}" title="Видалити">×</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="cart-footer" id="cartFooter">
+            <div class="cart-total">Разом: <strong id="cartTotalVal">{{ total }} ₴</strong></div>
+            <form method="post" action="/cart/checkout/">
+                {% csrf_token %}
+                <button type="submit" class="btn-submit" style="width:auto; padding:11px 28px;">Оформити замовлення</button>
+            </form>
+        </div>
+
+        {% else %}
+        <div class="orders-empty" id="cartEmpty">
+            Кошик порожній. <a href="/">Перейти до каталогу</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    function getCookie(name) {
+        const m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return m ? m[2] : null;
+    }
+
+    document.querySelectorAll('.cart-remove-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const itemId = btn.dataset.itemId;
+            const res = await fetch('/api/cart/', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ item_id: itemId }),
+            });
+            if (!res.ok) return;
+
+            document.getElementById('cartRow-' + itemId).remove();
+
+            const remaining = document.querySelectorAll('.cart-item-row').length;
+            const countEl = document.getElementById('cartCount');
+            if (countEl) countEl.textContent = remaining;
+
+            if (remaining === 0) {
+                document.getElementById('cartItems').remove();
+                document.getElementById('cartFooter').remove();
+                const empty = document.createElement('div');
+                empty.className = 'orders-empty';
+                empty.innerHTML = 'Кошик порожній. <a href="/">Перейти до каталогу</a>';
+                document.querySelector('.cart-card').appendChild(empty);
+            }
+        });
+    });
+}());
+</script>
+{% endblock %}

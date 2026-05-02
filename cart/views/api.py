@@ -21,12 +21,11 @@ class CartAPIView(APIView):
             return Response({'error': 'book_id required'}, status=status.HTTP_400_BAD_REQUEST)
 
         cart, _ = Cart.objects.get_or_create(user=request.user)
-        item, created = CartItem.objects.get_or_create(cart=cart, book_id=book_id)
+        item, created = CartItem.objects.get_or_create(
+            cart=cart, book_id=book_id, defaults={'quantity': quantity}
+        )
         if not created:
             item.quantity += quantity
-            item.save()
-        else:
-            item.quantity = quantity
             item.save()
 
         total_items = cart.items.count()

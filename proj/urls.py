@@ -12,4 +12,5 @@ urlpatterns = [
     # API
     path('api/', include('books.urls.api')),
     path('api/', include('orders.urls.api')),
+    path('api/', include('cart.urls.api')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

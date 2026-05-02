@@ -10,7 +10,15 @@
 
 <div class="book-grid">
     {% for book in books %}
-    <div class="book-card">
+    <div class="book-card"
+         data-id="{{ book.pk }}"
+         data-title="{{ book.title }}"
+         data-author="{{ book.author.first_name }} {{ book.author.last_name }}"
+         data-price="{{ book.price }}"
+         data-stock="{{ book.stock }}"
+         data-description="{{ book.description }}"
+         data-image="{% if book.image %}{{ book.image.url }}{% endif %}"
+         data-url="/books/{{ book.pk }}/">
         <div class="book-cover">
             {% if book.image %}
                 <img src="{{ book.image.url }}" alt="{{ book.title }}">
@@ -23,10 +31,30 @@
             <div class="book-author">{{ book.author.first_name }} {{ book.author.last_name }}</div>
             <div class="book-price">{{ book.price }} ₴</div>
         </div>
-        <a href="/books/{{ book.pk }}/" class="btn-primary">Детальніше</a>
+        <button class="btn-cart" data-book-id="{{ book.pk }}">До кошика</button>
     </div>
     {% empty %}
     <p style="color: var(--muted); grid-column: 1/-1;">Книги не знайдено.</p>
     {% endfor %}
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="bookModal">
+    <div class="modal">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-body">
+            <div class="modal-cover" id="modalCover">
+                <span class="no-cover">📖</span>
+            </div>
+            <div class="modal-info">
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <div class="modal-author" id="modalAuthor"></div>
+                <div class="modal-price" id="modalPrice"></div>
+                <div class="modal-stock" id="modalStock"></div>
+                <div class="modal-description" id="modalDescription"></div>
+                <button class="btn-buy" id="addToCart">До кошика</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

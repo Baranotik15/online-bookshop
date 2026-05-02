@@ -1,10 +1,10 @@
 from django.db import models
-from users.models import Users
+from users.models import User
 from books.models import Book
 
 
 class Cart(models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='carts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

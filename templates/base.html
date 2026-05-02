@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BookShop{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}?v=2">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <a href="/" class="logo">Book<span>Shop</span></a>
+        <nav>
+            <a href="/">Головна</a>
+            <a href="/api/books/" target="_blank">API</a>
+        </nav>
+        <div class="header-actions">
+            <button class="cart-btn" id="cartBtn">
+                🛒 <span class="cart-count" id="cartCount">0</span>
+            </button>
+            <a href="/admin/" class="btn-outline">Адмін</a>
+        </div>
+    </div>
+</header>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    &copy; 2025 BookShop. Всі права захищені.
+</footer>
+
+<script src="{% static 'js/main.js' %}?v=2"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

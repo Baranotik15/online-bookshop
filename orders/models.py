@@ -1,20 +1,31 @@
 from django.db import models
+from users.models import Users
+from books.models import Book
 
 
-class Orders(models.Model):
-    user_id = models.IntegerField()
-    total_price = models.DecimalField(max_digits=6, decimal_places=2)
-    status = models.CharField(max_length=20)
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('shipped', 'Shipped'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='orders')
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Order {self.id} - User {self.user_id}"
-    
+        return f"Order {self.id} - {self.user}"
+
 
 class OrderItem(models.Model):
-    order_id = models.ForeignKey(Orders, on_delete=models.CASCADE)
-    book_id = models.IntegerField()
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='order_items')
     quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=6, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
 
     def __str__(self):
-        return f"OrderItem {self.id} - Order {self.order_id.id} - Book {self.book_id}"
+        return f"{self.book} x {self.quantity}"

@@ -18,7 +18,11 @@
                     <div class="cart-item-title">{{ item.book.title }}</div>
                     <div class="cart-item-author">{{ item.book.author }}</div>
                 </div>
-                <div class="cart-item-qty">× {{ item.quantity }}</div>
+                <div class="cart-item-qty">
+                    <button class="qty-btn" data-item-id="{{ item.id }}" data-action="dec">−</button>
+                    <span class="qty-val" id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                    <button class="qty-btn" data-item-id="{{ item.id }}" data-action="inc">+</button>
+                </div>
                 <div class="cart-item-price">{{ item.book.price }} ₴</div>
                 <div class="cart-item-subtotal">{{ item.subtotal }} ₴</div>
                 <button class="cart-remove-btn" data-item-id="{{ item.id }}" title="Видалити">×</button>
@@ -51,6 +55,15 @@
         return m ? m[2] : null;
     }
 
+    function setEmpty() {
+        document.getElementById('cartItems').remove();
+        document.getElementById('cartFooter').remove();
+        const empty = document.createElement('div');
+        empty.className = 'orders-empty';
+        empty.innerHTML = 'Кошик порожній. <a href="/">Перейти до каталогу</a>';
+        document.querySelector('.cart-card').appendChild(empty);
+    }
+
     document.querySelectorAll('.cart-remove-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             const itemId = btn.dataset.itemId;
@@ -67,14 +80,43 @@
             const countEl = document.getElementById('cartCount');
             if (countEl) countEl.textContent = remaining;
 
-            if (remaining === 0) {
-                document.getElementById('cartItems').remove();
-                document.getElementById('cartFooter').remove();
-                const empty = document.createElement('div');
-                empty.className = 'orders-empty';
-                empty.innerHTML = 'Кошик порожній. <a href="/">Перейти до каталогу</a>';
-                document.querySelector('.cart-card').appendChild(empty);
+            if (remaining === 0) { setEmpty(); }
+        });
+    });
+
+    document.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const itemId = btn.dataset.itemId;
+            const qtyEl = document.getElementById('qty-' + itemId);
+            const current = parseInt(qtyEl.textContent, 10);
+            const next = btn.dataset.action === 'inc' ? current + 1 : current - 1;
+
+            if (next < 1) {
+                const delRes = await fetch('/api/cart/', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify({ item_id: itemId }),
+                });
+                if (!delRes.ok) return;
+                document.getElementById('cartRow-' + itemId).remove();
+                const remaining = document.querySelectorAll('.cart-item-row').length;
+                const countEl = document.getElementById('cartCount');
+                if (countEl) countEl.textContent = remaining;
+                if (remaining === 0) { setEmpty(); }
+                return;
             }
+
+            const res = await fetch('/api/cart/', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ item_id: itemId, quantity: next }),
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+
+            qtyEl.textContent = next;
+            document.querySelector(`#cartRow-${itemId} .cart-item-subtotal`).textContent = data.subtotal + ' ₴';
+            document.getElementById('cartTotalVal').textContent = data.total + ' ₴';
         });
     });
 }());

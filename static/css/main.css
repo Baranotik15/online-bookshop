@@ -662,7 +662,24 @@ footer {
 .cart-item-info { flex: 1; min-width: 0; }
 .cart-item-title { font-weight: 600; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-item-author { font-size: .8rem; color: var(--muted); margin-top: 2px; }
-.cart-item-qty { color: var(--muted); white-space: nowrap; min-width: 36px; text-align: center; }
+.cart-item-qty { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.qty-btn {
+    width: 26px;
+    height: 26px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: none;
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s, background .15s;
+}
+.qty-btn:hover { border-color: var(--navy); background: var(--bg); }
+.qty-val { min-width: 24px; text-align: center; font-weight: 600; color: var(--text); }
 .cart-item-price { color: var(--muted); white-space: nowrap; font-size: .85rem; }
 .cart-item-subtotal { font-weight: 700; color: var(--navy); white-space: nowrap; min-width: 80px; text-align: right; }
 

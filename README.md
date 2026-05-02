@@ -29,15 +29,8 @@ REST API for an online book store built with Django REST Framework.
 - `DELETE /api/orders/{id}/` — cancel/delete order
 
 ## 🛒 Cart
-- `GET /api/carts/` — list all carts (или корзины пользователя)
-- `GET /api/carts/{id}/` — get cart details
-- `POST /api/carts/` — create a new cart
-- `PUT /api/carts/{id}/` — update a cart
-- `DELETE /api/carts/{id}/` — delete a cart
-
-## 🧾 Cart Items
-- `GET /api/cart-items/` — list all cart items
-- `GET /api/cart-items/{id}` — get cart item details
-- `POST /api/cart-items/` — add book to cart
-- `PUT /api/cart-items/{id}/` — update quantity
-- `DELETE /api/cart-items/{id}/` — remove item from cart
+- `GET /api/cart/` — list all carts (или корзины пользователя)
+- `GET /api/cart/{id}/` — get cart details
+- `POST /api/cart/` — create a new cart
+- `PUT /api/cart/{id}/` — update a cart
+- `DELETE /api/cart/{id}/` — delete a cart

@@ -4,9 +4,11 @@ from .models import Book, Author
 
 
 class BookShortSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField()
+
     class Meta:
         model = Book
-        fields = ['id', 'title', 'price']
+        fields = ['id', 'title', 'price', 'author']
 
 
 class AuthorSerializer(serializers.ModelSerializer):

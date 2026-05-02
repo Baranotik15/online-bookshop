@@ -1,20 +1,20 @@
 from django.db import models
-from users.models import Users
+from users.models import User
 from books.models import Book
 
 
 class Cart(models.Model):
-    user_id = models.ForeignKey(Users, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carts')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user_id}"
+        return f"Cart of {self.user}"
 
 
-class CartItems(models.Model):
-    cart_id = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    book_id = models.ForeignKey(Book, on_delete=models.CASCADE)
+class CartItem(models.Model):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='cart_items')
     quantity = models.PositiveIntegerField()
 
     def __str__(self):
-        return f"{self.cart_id},{self.book_id},{self.quantity}"
+        return f"{self.book} x {self.quantity}"

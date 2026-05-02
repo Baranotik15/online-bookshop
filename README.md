@@ -19,3 +19,11 @@ REST API for an online book store built with Django REST Framework.
 - `POST /authors/` — create an author
 - `PUT /authors/{id}/` — update an author
 - `DELETE /authors/{id}/` — delete an author
+
+## 📦 Orders
+
+- `GET /orders/` — list user orders
+- `GET /orders/{id}/` — get order details
+- `POST /orders/` — create a new order
+- `PUT /orders/{id}/` — update order status
+- `DELETE /orders/{id}/` — cancel/delete order

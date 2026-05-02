@@ -52,6 +52,78 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ─── Fuzzy search ─────────────────────────────────────────
+    function levenshtein(a, b) {
+        const m = a.length, n = b.length;
+        const prev = Array.from({length: n + 1}, (_, j) => j);
+        const curr = new Array(n + 1);
+        for (let i = 1; i <= m; i++) {
+            curr[0] = i;
+            for (let j = 1; j <= n; j++) {
+                curr[j] = a[i-1] === b[j-1]
+                    ? prev[j-1]
+                    : 1 + Math.min(prev[j], curr[j-1], prev[j-1]);
+            }
+            prev.splice(0, n + 1, ...curr);
+        }
+        return prev[n];
+    }
+
+    function fuzzyScore(query, title) {
+        const q = query.toLowerCase().trim();
+        const t = title.toLowerCase();
+        if (!q) return 100;
+        if (t.includes(q)) return 100;
+
+        const qWords = q.split(/\s+/).filter(Boolean);
+        const tWords = t.split(/\s+/).filter(Boolean);
+        let total = 0;
+
+        for (const qw of qWords) {
+            let best = 0;
+            for (const tw of tWords) {
+                if (tw === qw)         { best = 100; break; }
+                if (tw.startsWith(qw)) { best = Math.max(best, 85); continue; }
+                if (tw.includes(qw))   { best = Math.max(best, 70); continue; }
+
+                // Повний levenshtein між словами
+                const dist = levenshtein(qw, tw);
+                const maxDist = Math.max(qw.length, tw.length) <= 4 ? 1
+                              : Math.max(qw.length, tw.length) <= 7 ? 2
+                              : 3;
+                if (dist <= maxDist) best = Math.max(best, Math.max(10, 65 - dist * 15));
+
+                // Порівняння підрядка: чи збігається початок tw з qw з похибкою
+                if (qw.length >= 3) {
+                    const sub = tw.slice(0, qw.length);
+                    const subDist = levenshtein(qw, sub);
+                    if (subDist <= 1) best = Math.max(best, 60);
+                }
+            }
+            if (best === 0) return 0;
+            total += best;
+        }
+        return total / qWords.length;
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const bookCount   = document.getElementById('bookCount');
+    const allCards    = document.querySelectorAll('.book-card');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.trim();
+            let visible = 0;
+            allCards.forEach(card => {
+                const score = fuzzyScore(q, card.dataset.title);
+                const show  = score > 0;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            if (bookCount) bookCount.textContent = visible + ' книг';
+        });
+    }
+
     // ─── Book modal ───────────────────────────────────────────
     const overlay   = document.getElementById('bookModal');
     if (!overlay) return;

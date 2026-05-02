@@ -3,9 +3,17 @@
 {% block title %}Книги — BookShop{% endblock %}
 
 {% block content %}
-<div class="page-heading">
-    <h1>Каталог книг</h1>
-    <span class="count">{{ books|length }} книг</span>
+<div class="catalog-hero">
+    <div class="catalog-hero-text">
+        <h1>Каталог книг</h1>
+        <span class="count" id="bookCount">{{ books|length }} книг</span>
+    </div>
+    <div class="search-bar">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Пошук за назвою книги...">
+    </div>
 </div>
 
 <div class="book-grid">

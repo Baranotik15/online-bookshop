@@ -138,6 +138,70 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
 .page-heading h1 { font-size: 1.7rem; font-weight: 700; color: var(--navy); }
 .page-heading .count { font-size: .9rem; color: var(--muted); }
 
+/* ─── Catalog hero ─── */
+.catalog-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    background: var(--navy);
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 32px;
+}
+
+.catalog-hero-text h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fff;
+}
+.catalog-hero-text .count {
+    font-size: .85rem;
+    color: rgba(255,255,255,.55);
+    margin-top: 4px;
+    display: block;
+}
+
+/* ─── Search ─── */
+.search-bar {
+    position: relative;
+    flex: 1;
+    max-width: 460px;
+}
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    color: var(--muted);
+    pointer-events: none;
+}
+.search-bar input {
+    width: 100%;
+    padding: 11px 16px 11px 42px;
+    border: 2px solid transparent;
+    border-radius: 10px;
+    font-size: .95rem;
+    font-family: inherit;
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    outline: none;
+    transition: background .15s, border-color .15s;
+}
+.search-bar input::placeholder { color: rgba(255,255,255,.45); }
+.search-bar input:focus {
+    background: rgba(255,255,255,.18);
+    border-color: var(--gold);
+}
+.search-icon { color: rgba(255,255,255,.5); }
+
+@media (max-width: 640px) {
+    .catalog-hero { flex-direction: column; align-items: flex-start; }
+    .search-bar { max-width: 100%; width: 100%; }
+}
+
 /* ─── Book grid ─── */
 .book-grid {
     display: grid;

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Профіль — BookShop{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.username|first|upper }}</div>
+        <div class="profile-meta">
+            <h1>{{ user.username }}</h1>
+            <div class="profile-email">{{ user.email }}</div>
+            <div class="profile-since">З нами з {{ user.date_joined|date:"d.m.Y" }}</div>
+        </div>
+        <div class="profile-actions">
+            <a href="/profile/edit/" class="gear-btn" title="Редагувати профіль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+            </a>
+            <a href="/logout/" class="btn-submit" style="width:auto; padding: 10px 24px;">Вийти</a>
+        </div>
+    </div>
+
+    <div class="profile-orders">
+        <h2>Мої замовлення <span class="count">{{ orders|length }}</span></h2>
+        {% if orders %}
+        <div class="orders-list">
+            {% for order in orders %}
+            <div class="order-card">
+                <div class="order-top">
+                    <div>
+                        <span class="order-id"># {{ order.id }}</span>
+                        <span class="order-date">{{ order.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <span class="order-status order-status--{{ order.status }}">
+                        {% if order.status == 'pending' %}Очікує
+                        {% elif order.status == 'paid' %}Оплачено
+                        {% elif order.status == 'shipped' %}Відправлено
+                        {% elif order.status == 'cancelled' %}Скасовано
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="order-items">
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        <span class="order-item-title">{{ item.book.title }}</span>
+                        <span class="order-item-qty">× {{ item.quantity }}</span>
+                        <span class="order-item-price">{{ item.price }} ₴</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="order-total">Разом: <strong>{{ order.total_price }} ₴</strong></div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="orders-empty">Замовлень ще немає. <a href="/">Перейти до каталогу</a></div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

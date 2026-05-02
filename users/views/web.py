@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 from django import forms
 
 from users.models import User
+from orders.models import Order
 
 
 class RegisterForm(forms.ModelForm):
@@ -29,6 +30,25 @@ class RegisterForm(forms.ModelForm):
         return user
 
 
+class EditProfileForm(forms.ModelForm):
+    new_password = forms.CharField(
+        widget=forms.PasswordInput, label='Новий пароль', required=False
+    )
+
+    class Meta:
+        model = User
+        fields = ['username', 'email']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        pw = self.cleaned_data.get('new_password')
+        if pw:
+            user.set_password(pw)
+        if commit:
+            user.save()
+        return user
+
+
 def register(request):
     if request.user.is_authenticated:
         return redirect('/')
@@ -41,3 +61,25 @@ def register(request):
     else:
         form = RegisterForm()
     return render(request, 'users/register.html', {'form': form})
+
+
+def _orders(user):
+    return Order.objects.filter(user=user).prefetch_related('items__book').order_by('-created_at')
+
+
+@login_required
+def profile(request):
+    return render(request, 'users/profile.html', {'orders': _orders(request.user)})
+
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            login(request, request.user)
+            return redirect('/profile/')
+    else:
+        form = EditProfileForm(instance=request.user)
+    return render(request, 'users/edit_profile.html', {'form': form})

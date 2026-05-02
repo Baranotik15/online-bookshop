@@ -8,6 +8,7 @@ urlpatterns = [
 
     # Web
     path('', include('books.urls.web')),
+    path('', include('users.urls.web')),
 
     # API
     path('api/', include('books.urls.api')),

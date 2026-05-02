@@ -1,5 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ─── Profile dropdown ─────────────────────────────────────
+    const profileMenu = document.getElementById('profileMenu');
+    if (profileMenu) {
+        const dropdown = profileMenu.querySelector('.profile-dropdown');
+        profileMenu.addEventListener('click', e => {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', () => dropdown.classList.remove('open'));
+    }
+
     // ─── Active nav ───────────────────────────────────────────
     const path = window.location.pathname;
     document.querySelectorAll('nav a').forEach(link => {

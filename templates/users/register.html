@@ -5,23 +5,39 @@
 {% block content %}
 <div class="auth-wrap">
     <div class="auth-card">
-        <h1 class="auth-title">Реєстрація</h1>
+        {% if email_sent %}
+            <h1 class="auth-title">Перевірте пошту</h1>
+            <p style="color: var(--muted); margin-bottom: 12px;">
+                На адресу <strong>{{ email }}</strong> надіслано листа з посиланням для підтвердження.
+            </p>
+            <p style="color: var(--muted); font-size: .88rem;">
+                Посилання дійсне 24 години. Перевірте папку «Спам», якщо лист не з'явився.
+            </p>
+        {% else %}
+            <h1 class="auth-title">Реєстрація</h1>
 
-        <form method="post" novalidate>
-            {% csrf_token %}
-            {% for field in form %}
-            <div class="form-group">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                    <div class="form-error">{{ field.errors.0 }}</div>
-                {% endif %}
-            </div>
-            {% endfor %}
-            <button type="submit" class="btn-submit">Зареєструватись</button>
-        </form>
+            {% if messages %}
+                {% for message in messages %}
+                <div class="form-error" style="margin-bottom: 12px;">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
 
-        <p class="auth-link">Вже є акаунт? <a href="/login/">Увійти</a></p>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group">
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="form-error">{{ field.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn-submit">Зареєструватись</button>
+            </form>
+
+            <p class="auth-link">Вже є акаунт? <a href="/login/">Увійти</a></p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

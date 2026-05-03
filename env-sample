@@ -1,6 +1,15 @@
 SECRET_KEY=django-insecure-change-me-in-production
 DEBUG=true
 
+# Email (locally prints to console by default)
+# EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+# EMAIL_HOST=smtp.gmail.com
+# EMAIL_PORT=587
+# EMAIL_USE_TLS=true
+# EMAIL_HOST_USER=your@gmail.com
+# EMAIL_HOST_PASSWORD=your-app-password
+# DEFAULT_FROM_EMAIL=BookShop <noreply@bookshop.ua>
+
 # Stripe (get from Stripe Dashboard → Developers → API keys)
 STRIPE_PUBLIC_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...

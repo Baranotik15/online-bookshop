@@ -7,6 +7,12 @@
     <div class="auth-card">
         <h1 class="auth-title">Вхід</h1>
 
+        {% for message in messages %}
+        <div class="form-success" style="background:#166534; color:#fff; padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:.9rem;">
+            {{ message }}
+        </div>
+        {% endfor %}
+
         <form method="post" novalidate>
             {% csrf_token %}
             {% for field in form %}

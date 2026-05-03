@@ -55,40 +55,121 @@ Single endpoint, requires authentication. All actions use `/api/cart/`.
 - `PATCH /api/cart/` — update quantity `{ "item_id": 5, "quantity": 3 }` → returns `{ subtotal, total }`
 - `DELETE /api/cart/` — remove item `{ "item_id": 5 }` → returns `{ total_items, total_price }`
 
-## 🐳 Docker
+## 💻 Local development
 
-**Requirements:** Docker + Docker Compose installed.
+**Requirements:** Python 3.12+
 
-**1. Fill the env file:**
+**1. Clone the repository:**
 ```bash
+git clone https://github.com/your-username/online-bookshop.git
+cd online-bookshop
+```
+
+**2. Create and activate virtual environment:**
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux/macOS
+source venv/bin/activate
+```
+
+**3. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Create `.env`:**
+```bash
+cp env-sample .env
 # fill in SECRET_KEY and Stripe keys
 ```
 
-**2. Build and start:**
+**5. Apply migrations:**
 ```bash
-docker compose up --build
+python manage.py migrate
 ```
 
-The app will be available at **http://localhost:8000/**
-
-**3. Seed the database (optional):**
+**6. Create a superuser:**
 ```bash
-docker exec online-bookshop-web-1 python fixture.py
+python manage.py createsuperuser
 ```
 
-**4. Create a superuser:**
+**7. Seed the database (optional):**
+```bash
+python fixture.py
+```
+
+**8. Run the server:**
+```bash
+python manage.py runserver
+```
+
+The app will be available at **http://localhost:8000**
+
+---
+
+## 🚀 Deployment (EC2 or any Linux host)
+
+**Requirements:** Ubuntu server, Docker, Docker Compose, open port 8000 in firewall/Security Group.
+
+**1. Install Docker:**
+```bash
+sudo apt update && sudo apt install -y docker.io docker-compose-plugin
+sudo usermod -aG docker $USER && newgrp docker
+```
+
+**2. Clone the repository:**
+```bash
+git clone https://github.com/your-username/online-bookshop.git
+cd online-bookshop
+```
+
+**3. Create and fill `.env`:**
+```bash
+cp env-sample .env
+nano .env
+```
+
+Set the following values:
+```
+SECRET_KEY=           # generate: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+DEBUG=false
+STRIPE_PUBLIC_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+**4. Add your domain or IP to `ALLOWED_HOSTS` in `proj/settings.py`:**
+```python
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'your-domain.com', 'your-ec2-ip']
+```
+
+**5. Build and start:**
+```bash
+docker compose up --build -d
+```
+
+The app will be available at **http://your-domain.com:8000**
+
+**6. Create a superuser:**
 ```bash
 docker exec -it online-bookshop-web-1 python manage.py createsuperuser
 ```
 
-**Stop containers** (data is preserved):
+**7. Seed the database (optional):**
 ```bash
-docker compose down
+docker exec online-bookshop-web-1 python fixture.py
 ```
 
-**Stop and delete all data:**
+**Useful commands:**
 ```bash
-docker compose down -v
+docker compose logs -f          # view logs
+docker compose down             # stop (data preserved)
+docker compose down -v          # stop and delete all data
+docker compose up -d            # start after server reboot
 ```
 
 ---

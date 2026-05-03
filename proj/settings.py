@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,85 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
 
+UNFOLD = {
+    "SITE_TITLE": "BookShop",
+    "SITE_HEADER": "BookShop Admin",
+    "SITE_URL": "/",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "COLORS": {
+        "primary": {
+            "50":  "236 243 251",
+            "100": "207 225 244",
+            "200": "158 196 233",
+            "300": "109 166 221",
+            "400": "73 137 207",
+            "500": "43 108 176",
+            "600": "27 74 120",
+            "700": "18 40 64",
+            "800": "12 27 43",
+            "900": "6 14 22",
+            "950": "3 7 11",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Каталог",
+                "separator": False,
+                "items": [
+                    {
+                        "title": "Книги",
+                        "icon": "book_2",
+                        "link": reverse_lazy("admin:books_book_changelist"),
+                    },
+                    {
+                        "title": "Автори",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:books_author_changelist"),
+                    },
+                    {
+                        "title": "Жанри",
+                        "icon": "label",
+                        "link": reverse_lazy("admin:books_genre_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Магазин",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Замовлення",
+                        "icon": "shopping_bag",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
+                    },
+                    {
+                        "title": "Кошики",
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:cart_cart_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Користувачі",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Користувачі",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+}
+
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

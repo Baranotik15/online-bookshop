@@ -122,21 +122,124 @@ document.addEventListener('DOMContentLoaded', () => {
         return total / qWords.length;
     }
 
-    const searchInput = document.getElementById('searchInput');
-    const bookCount   = document.getElementById('bookCount');
-    const allCards    = document.querySelectorAll('.book-card');
+    const searchInput  = document.getElementById('searchInput');
+    const bookCount    = document.getElementById('bookCount');
+    const allCards     = document.querySelectorAll('.book-card');
+    const priceMinEl   = document.getElementById('priceMin');
+    const priceMaxEl   = document.getElementById('priceMax');
+    const priceMinVal  = document.getElementById('priceMinVal');
+    const priceMaxVal  = document.getElementById('priceMaxVal');
+    const rangeFill    = document.getElementById('rangeFill');
+    const authorDropdown = document.getElementById('authorDropdown');
+    const authorDropdownBtn = document.getElementById('authorDropdownBtn');
+    const authorDropdownMenu = document.getElementById('authorDropdownMenu');
+    const authorSearchEl = document.getElementById('authorSearch');
+    const authorDropdownLabel = document.getElementById('authorDropdownLabel');
 
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            const q = searchInput.value.trim();
-            let visible = 0;
-            allCards.forEach(card => {
-                const score = fuzzyScore(q, card.dataset.title);
-                const show  = score > 0;
-                card.style.display = show ? '' : 'none';
-                if (show) visible++;
+    if (priceMinEl && allCards.length) {
+        const prices    = Array.from(allCards).map(c => parseFloat(c.dataset.price));
+        const globalMin = Math.floor(Math.min(...prices));
+        const globalMax = Math.ceil(Math.max(...prices));
+
+        [priceMinEl, priceMaxEl].forEach(el => {
+            el.min = globalMin; el.max = globalMax;
+        });
+        priceMinEl.value = globalMin;
+        priceMaxEl.value = globalMax;
+        priceMinVal.textContent = globalMin;
+        priceMaxVal.textContent = globalMax;
+        rangeFill.style.left  = '0%';
+        rangeFill.style.width = '100%';
+    }
+
+    function getSelectedAuthors() {
+        if (!authorDropdown) return new Set();
+        return new Set(
+            Array.from(authorDropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                 .map(cb => cb.value)
+        );
+    }
+
+    function updateAuthorLabel() {
+        const selected = getSelectedAuthors();
+        authorDropdownLabel.textContent = selected.size === 0
+            ? 'Усі автори'
+            : selected.size === 1
+                ? authorDropdown.querySelector(`input[value="${[...selected][0]}"]+*`)?.textContent.trim()
+                  ?? `1 автор`
+                : `${selected.size} автори`;
+    }
+
+    function applyFilters() {
+        const q       = searchInput ? searchInput.value.trim() : '';
+        const min     = priceMinEl ? parseFloat(priceMinEl.value) : 0;
+        const max     = priceMaxEl ? parseFloat(priceMaxEl.value) : Infinity;
+        const authors = getSelectedAuthors();
+        let visible = 0;
+        allCards.forEach(card => {
+            const score = fuzzyScore(q, card.dataset.title);
+            const price = parseFloat(card.dataset.price);
+            const show  = score > 0 && price >= min && price <= max
+                       && (authors.size === 0 || authors.has(card.dataset.authorId));
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        if (bookCount) bookCount.textContent = visible + ' книг';
+    }
+
+    function updateSlider() {
+        let min = parseFloat(priceMinEl.value);
+        let max = parseFloat(priceMaxEl.value);
+        if (min > max) { priceMinEl.value = max; min = max; }
+        if (max < min) { priceMaxEl.value = min; max = min; }
+        const globalMin = parseFloat(priceMinEl.min);
+        const globalMax = parseFloat(priceMinEl.max);
+        const pct1 = (min - globalMin) / (globalMax - globalMin) * 100;
+        const pct2 = (max - globalMin) / (globalMax - globalMin) * 100;
+        rangeFill.style.left  = pct1 + '%';
+        rangeFill.style.width = (pct2 - pct1) + '%';
+        priceMinVal.textContent = Math.round(min);
+        priceMaxVal.textContent = Math.round(max);
+        applyFilters();
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (priceMinEl)  priceMinEl.addEventListener('input', updateSlider);
+    if (priceMaxEl)  priceMaxEl.addEventListener('input', updateSlider);
+
+    if (authorDropdown) {
+        const authorClearBtn = document.getElementById('authorClearBtn');
+
+        function updateClearBtn() {
+            const hasChecked = authorDropdown.querySelectorAll('input[type="checkbox"]:checked').length > 0;
+            authorClearBtn.style.display = hasChecked ? '' : 'none';
+        }
+
+        authorDropdownBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            authorDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', e => {
+            if (!authorDropdown.contains(e.target)) authorDropdown.classList.remove('open');
+        });
+        authorSearchEl.addEventListener('input', () => {
+            const q = authorSearchEl.value.toLowerCase();
+            authorDropdown.querySelectorAll('.author-option').forEach(opt => {
+                opt.style.display = opt.textContent.toLowerCase().includes(q) ? '' : 'none';
             });
-            if (bookCount) bookCount.textContent = visible + ' книг';
+        });
+        authorClearBtn.addEventListener('click', () => {
+            authorDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateAuthorLabel();
+            updateClearBtn();
+            applyFilters();
+        });
+        authorDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateAuthorLabel();
+                updateClearBtn();
+                applyFilters();
+            });
         });
     }
 

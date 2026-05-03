@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from unfold.admin import ModelAdmin
+from unfold.decorators import display
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from proj.admin_mixins import SuperuserEditMixin
@@ -13,7 +14,11 @@ class UserAdmin(SuperuserEditMixin, BaseUserAdmin, ModelAdmin):
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
-    list_display = ['email', 'username', 'is_staff', 'is_superuser', 'is_active', 'created_at']
+    list_display = ['email', 'username', 'is_staff', 'is_superuser', 'email_confirmed', 'created_at']
+
+    @display(description='Email confirmed', boolean=True)
+    def email_confirmed(self, obj):
+        return obj.is_active
     list_filter = ['is_staff', 'is_superuser', 'is_active']
     search_fields = ['email', 'username']
     ordering = ['email']

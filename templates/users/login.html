@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Вхід — BookShop{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card">
+        <h1 class="auth-title">Вхід</h1>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="form-error">{{ field.errors.0 }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% if form.non_field_errors %}
+                <div class="form-error">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+            <button type="submit" class="btn-submit">Увійти</button>
+        </form>
+
+        <p class="auth-link">Немає акаунту? <a href="/register/">Зареєструватись</a></p>
+    </div>
+</div>
+{% endblock %}

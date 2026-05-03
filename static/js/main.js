@@ -1,5 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ─── Profile dropdown ─────────────────────────────────────
+    const profileMenu = document.getElementById('profileMenu');
+    if (profileMenu) {
+        const dropdown = profileMenu.querySelector('.profile-dropdown');
+        profileMenu.addEventListener('click', e => {
+            e.stopPropagation();
+            dropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', () => dropdown.classList.remove('open'));
+    }
+
     // ─── Active nav ───────────────────────────────────────────
     const path = window.location.pathname;
     document.querySelectorAll('nav a').forEach(link => {
@@ -14,15 +25,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function showToast(msg, isError = false) {
         toast.textContent = msg;
         toast.style.background = isError ? '#b91c1c' : '#1e293b';
+        toast.classList.remove('show');
+        void toast.offsetWidth;
         toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
     // ─── Cart count ───────────────────────────────────────────
     const cartCount = document.getElementById('cartCount');
+    const cartSum   = document.getElementById('cartSum');
 
     function updateCartCount(n) {
         if (cartCount) cartCount.textContent = n;
+    }
+
+    function updateCartSum(total) {
+        if (!cartSum) return;
+        const n = parseFloat(total);
+        cartSum.textContent = n > 0 ? Math.round(n) + ' ₴' : '';
+    }
+
+    if (cartCount) {
+        fetch('/api/cart/')
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data) {
+                    updateCartCount(data.items.length);
+                    updateCartSum(data.total_price);
+                }
+            })
+            .catch(() => {});
     }
 
     function getCookie(name) {
@@ -46,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await res.json();
             updateCartCount(data.total_items);
+            updateCartSum(data.total_price);
             showToast('Додано до кошика ✓');
         } catch {
             showToast('Помилка з\'єднання', true);
@@ -86,14 +118,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tw.startsWith(qw)) { best = Math.max(best, 85); continue; }
                 if (tw.includes(qw))   { best = Math.max(best, 70); continue; }
 
-                // Повний levenshtein між словами
                 const dist = levenshtein(qw, tw);
                 const maxDist = Math.max(qw.length, tw.length) <= 4 ? 1
                               : Math.max(qw.length, tw.length) <= 7 ? 2
                               : 3;
                 if (dist <= maxDist) best = Math.max(best, Math.max(10, 65 - dist * 15));
 
-                // Порівняння підрядка: чи збігається початок tw з qw з похибкою
                 if (qw.length >= 3) {
                     const sub = tw.slice(0, qw.length);
                     const subDist = levenshtein(qw, sub);
@@ -106,21 +136,154 @@ document.addEventListener('DOMContentLoaded', () => {
         return total / qWords.length;
     }
 
-    const searchInput = document.getElementById('searchInput');
-    const bookCount   = document.getElementById('bookCount');
-    const allCards    = document.querySelectorAll('.book-card');
+    const searchInput  = document.getElementById('searchInput');
+    const bookCount    = document.getElementById('bookCount');
+    const allCards     = document.querySelectorAll('.book-card');
+    const priceMinEl   = document.getElementById('priceMin');
+    const priceMaxEl   = document.getElementById('priceMax');
+    const priceMinVal  = document.getElementById('priceMinVal');
+    const priceMaxVal  = document.getElementById('priceMaxVal');
+    const rangeFill    = document.getElementById('rangeFill');
+    const activeGenres  = new Set();
+    const genreTagsContainer = document.getElementById('genreTags');
 
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            const q = searchInput.value.trim();
-            let visible = 0;
-            allCards.forEach(card => {
-                const score = fuzzyScore(q, card.dataset.title);
-                const show  = score > 0;
-                card.style.display = show ? '' : 'none';
-                if (show) visible++;
+    function attachGenreTag(tag) {
+        tag.addEventListener('click', () => {
+            const id = tag.dataset.genreId;
+            if (activeGenres.has(id)) { activeGenres.delete(id); tag.classList.remove('active'); }
+            else                      { activeGenres.add(id);    tag.classList.add('active'); }
+            applyFilters();
+        });
+    }
+
+    if (genreTagsContainer) {
+        fetch('/api/genres/')
+            .then(r => r.ok ? r.json() : [])
+            .then(genres => {
+                genres.forEach(g => {
+                    const btn = document.createElement('button');
+                    btn.className = 'genre-tag';
+                    btn.dataset.genreId = String(g.id);
+                    btn.textContent = g.name;
+                    attachGenreTag(btn);
+                    genreTagsContainer.appendChild(btn);
+                });
+            })
+            .catch(() => {});
+    }
+
+    const authorDropdown = document.getElementById('authorDropdown');
+    const authorDropdownBtn = document.getElementById('authorDropdownBtn');
+    const authorDropdownMenu = document.getElementById('authorDropdownMenu');
+    const authorSearchEl = document.getElementById('authorSearch');
+    const authorDropdownLabel = document.getElementById('authorDropdownLabel');
+
+    if (priceMinEl && allCards.length) {
+        const prices    = Array.from(allCards).map(c => parseFloat(c.dataset.price));
+        const globalMin = Math.floor(Math.min(...prices));
+        const globalMax = Math.ceil(Math.max(...prices));
+
+        [priceMinEl, priceMaxEl].forEach(el => {
+            el.min = globalMin; el.max = globalMax;
+        });
+        priceMinEl.value = globalMin;
+        priceMaxEl.value = globalMax;
+        priceMinVal.textContent = globalMin;
+        priceMaxVal.textContent = globalMax;
+        rangeFill.style.left  = '0%';
+        rangeFill.style.width = '100%';
+    }
+
+    function getSelectedAuthors() {
+        if (!authorDropdown) return new Set();
+        return new Set(
+            Array.from(authorDropdown.querySelectorAll('input[type="checkbox"]:checked'))
+                 .map(cb => cb.value)
+        );
+    }
+
+    function updateAuthorLabel() {
+        const selected = getSelectedAuthors();
+        authorDropdownLabel.textContent = selected.size === 0
+            ? 'Усі автори'
+            : selected.size === 1
+                ? authorDropdown.querySelector(`input[value="${[...selected][0]}"]+*`)?.textContent.trim()
+                  ?? `1 автор`
+                : `${selected.size} автори`;
+    }
+
+    function applyFilters() {
+        const q       = searchInput ? searchInput.value.trim() : '';
+        const min     = priceMinEl ? parseFloat(priceMinEl.value) : 0;
+        const max     = priceMaxEl ? parseFloat(priceMaxEl.value) : Infinity;
+        const authors = getSelectedAuthors();
+        let visible = 0;
+        allCards.forEach(card => {
+            const score = fuzzyScore(q, card.dataset.title);
+            const price = parseFloat(card.dataset.price);
+            const cardGenres = new Set(card.dataset.genres ? card.dataset.genres.split(',') : []);
+        const show  = score > 0 && price >= min && price <= max
+                   && (authors.size === 0 || authors.has(card.dataset.authorId))
+                   && (activeGenres.size === 0 || [...activeGenres].every(g => cardGenres.has(g)));
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        if (bookCount) bookCount.textContent = visible + ' книг';
+    }
+
+    function updateSlider() {
+        let min = parseFloat(priceMinEl.value);
+        let max = parseFloat(priceMaxEl.value);
+        if (min > max) { priceMinEl.value = max; min = max; }
+        if (max < min) { priceMaxEl.value = min; max = min; }
+        const globalMin = parseFloat(priceMinEl.min);
+        const globalMax = parseFloat(priceMinEl.max);
+        const pct1 = (min - globalMin) / (globalMax - globalMin) * 100;
+        const pct2 = (max - globalMin) / (globalMax - globalMin) * 100;
+        rangeFill.style.left  = pct1 + '%';
+        rangeFill.style.width = (pct2 - pct1) + '%';
+        priceMinVal.textContent = Math.round(min);
+        priceMaxVal.textContent = Math.round(max);
+        applyFilters();
+    }
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (priceMinEl)  priceMinEl.addEventListener('input', updateSlider);
+    if (priceMaxEl)  priceMaxEl.addEventListener('input', updateSlider);
+
+    if (authorDropdown) {
+        const authorClearBtn = document.getElementById('authorClearBtn');
+
+        function updateClearBtn() {
+            const hasChecked = authorDropdown.querySelectorAll('input[type="checkbox"]:checked').length > 0;
+            authorClearBtn.style.display = hasChecked ? '' : 'none';
+        }
+
+        authorDropdownBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            authorDropdown.classList.toggle('open');
+        });
+        document.addEventListener('click', e => {
+            if (!authorDropdown.contains(e.target)) authorDropdown.classList.remove('open');
+        });
+        authorSearchEl.addEventListener('input', () => {
+            const q = authorSearchEl.value.toLowerCase();
+            authorDropdown.querySelectorAll('.author-option').forEach(opt => {
+                opt.style.display = opt.textContent.toLowerCase().includes(q) ? '' : 'none';
             });
-            if (bookCount) bookCount.textContent = visible + ' книг';
+        });
+        authorClearBtn.addEventListener('click', () => {
+            authorDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateAuthorLabel();
+            updateClearBtn();
+            applyFilters();
+        });
+        authorDropdown.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', () => {
+                updateAuthorLabel();
+                updateClearBtn();
+                applyFilters();
+            });
         });
     }
 
@@ -134,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authorEl  = document.getElementById('modalAuthor');
     const priceEl   = document.getElementById('modalPrice');
     const stockEl   = document.getElementById('modalStock');
+    const genresEl  = document.getElementById('modalGenres');
     const descEl    = document.getElementById('modalDescription');
     const addBtn    = document.getElementById('addToCart');
 
@@ -153,6 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
             : `<span class="stock-badge out-of-stock">&#10007; Немає в наявності</span>`;
 
         if (addBtn) addBtn.disabled = qty === 0;
+
+        if (genresEl) {
+            const names = card.dataset.genreNames ? card.dataset.genreNames.split(',') : [];
+            genresEl.innerHTML = names.map(n => `<span class="modal-genre-tag">${n.trim()}</span>`).join('');
+        }
 
         const img = card.dataset.image;
         cover.innerHTML = img

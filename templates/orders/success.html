@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Замовлення оформлено — BookShop{% endblock %}
+
+{% block content %}
+<div class="cart-page">
+    <div class="cart-card" style="text-align:center; padding: 48px 36px;">
+
+        <div style="font-size:3.5rem; margin-bottom:16px;">✓</div>
+        <h1 style="font-size:1.6rem; font-weight:700; color:var(--navy); margin-bottom:8px;">Дякуємо за замовлення!</h1>
+        <p style="color:var(--muted); margin-bottom:32px;">Оплата успішно пройшла. Ваше замовлення обробляється.</p>
+
+        {% if order %}
+        <div style="text-align:left; margin-bottom:32px;">
+            <div class="order-card" style="margin:0;">
+                <div class="order-top">
+                    <div>
+                        <span class="order-id"># {{ order.id }}</span>
+                        <span class="order-date">{{ order.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                    <span class="order-status order-status--{{ order.status }}">
+                        {% if order.status == 'pending' %}Очікує
+                        {% elif order.status == 'paid' %}Оплачено
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="order-items">
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        <span class="order-item-title">{{ item.book.title }}</span>
+                        <span class="order-item-qty">× {{ item.quantity }}</span>
+                        <span class="order-item-price">{{ item.price }} ₴</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="order-total">Разом: <strong>{{ order.total_price }} ₴</strong></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div style="display:flex; gap:12px; justify-content:center;">
+            <a href="/" class="btn-outline" style="color:var(--navy); border-color:var(--border);">До каталогу</a>
+            <a href="/profile/" class="btn-submit" style="width:auto; padding:11px 28px;">Мої замовлення</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

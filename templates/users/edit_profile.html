@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Редагування профілю — BookShop{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card" style="max-width: 520px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
+            <h1 class="auth-title" style="margin-bottom:0;">Редагування профілю</h1>
+            <a href="/profile/" style="font-size:.85rem; color:var(--muted); text-decoration:none;">← Назад</a>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="edit-section">
+                <div class="edit-section-title">Ім'я користувача</div>
+                {{ form.username }}
+                {% if form.username.errors %}<div class="form-error">{{ form.username.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="edit-section">
+                <div class="edit-section-title">Email</div>
+                {{ form.email }}
+                {% if form.email.errors %}<div class="form-error">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="edit-section">
+                <div class="edit-section-title">Новий пароль</div>
+                {{ form.new_password }}
+                <span style="font-size:.78rem; color:var(--muted); margin-top:4px; display:block;">Залиште порожнім, щоб не змінювати</span>
+                {% if form.new_password.errors %}<div class="form-error">{{ form.new_password.errors.0 }}</div>{% endif %}
+            </div>
+
+            <button type="submit" class="btn-submit">Зберегти зміни</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

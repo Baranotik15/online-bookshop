@@ -31,4 +31,4 @@ class OrderSerializer(serializers.ModelSerializer):
             'created_at',
             'items'
         ]
-        read_only_fields = ['created_at']
+        read_only_fields = ['user', 'created_at']

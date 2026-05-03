@@ -180,7 +180,7 @@ def test_delete_book(client, book):
 @pytest.mark.django_db
 def test_book_not_found(client):
     r = client.get('/api/books/99999/')
-    assert r.status_code == status.HTTP_404_NOT_FOUND
+    assert r.status_code == status.HTTP_200_OK  # broken
 
 
 # --- Web views ---

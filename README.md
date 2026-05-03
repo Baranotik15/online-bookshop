@@ -110,6 +110,17 @@ cp env-sample .env
 # fill in SECRET_KEY and Stripe keys
 ```
 
+> **Email confirmation** is required on registration. Locally, emails print to the console by default (`EMAIL_BACKEND=console`). To use real SMTP (e.g. Gmail), set these in `.env`:
+> ```
+> EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+> EMAIL_HOST=smtp.gmail.com
+> EMAIL_PORT=587
+> EMAIL_USE_TLS=true
+> EMAIL_HOST_USER=your@gmail.com
+> EMAIL_HOST_PASSWORD=your-app-password   # Google Account → Security → App passwords
+> DEFAULT_FROM_EMAIL=BookShop <your@gmail.com>
+> ```
+
 **5. Apply migrations:**
 ```bash
 python manage.py migrate
@@ -168,6 +179,14 @@ DEBUG=false
 STRIPE_PUBLIC_KEY=pk_live_...
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=true
+EMAIL_HOST_USER=your@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+DEFAULT_FROM_EMAIL=BookShop <your@gmail.com>
 ```
 
 **4. Add your domain or IP to `ALLOWED_HOSTS` in `proj/settings.py`:**

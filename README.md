@@ -1,5 +1,6 @@
 # online-bookshop
 ![Database schema](static/table_schema.png)
+
 # 📚 Bookshop API
 
 REST API for an online book store built with Django REST Framework.
@@ -55,6 +56,28 @@ Single endpoint, requires authentication. All actions use `/api/cart/`.
 - `PATCH /api/cart/` — update quantity `{ "item_id": 5, "quantity": 3 }` → returns `{ subtotal, total }`
 - `DELETE /api/cart/` — remove item `{ "item_id": 5 }` → returns `{ total_items, total_price }`
 
+## 🔧 Admin panel
+
+Available at `/admin/`. Built with [django-unfold](https://github.com/unfoldadmin/django-unfold).
+
+**Access levels:**
+| Role | Access |
+|------|--------|
+| Superuser | Full access to everything |
+| Staff + group | Can edit models assigned to their group |
+| Staff (no group) | Read-only |
+
+**Groups** (create with `python manage.py create_groups`):
+| Group | Models |
+|-------|--------|
+| Edit Books | Book, Author, Genre |
+| Edit Orders | Order, OrderItem |
+| Edit Users | User |
+
+> Cart is read-only for everyone in the admin panel.
+
+---
+
 ## 💻 Local development
 
 **Requirements:** Python 3.12+
@@ -97,12 +120,17 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-**7. Seed the database (optional):**
+**7. Create admin groups (once):**
+```bash
+python manage.py create_groups
+```
+
+**8. Seed the database (optional):**
 ```bash
 python fixture.py
 ```
 
-**8. Run the server:**
+**9. Run the server:**
 ```bash
 python manage.py runserver
 ```
@@ -159,7 +187,12 @@ The app will be available at **http://your-domain.com:8000**
 docker exec -it online-bookshop-web-1 python manage.py createsuperuser
 ```
 
-**7. Seed the database (optional):**
+**7. Create admin groups (once):**
+```bash
+docker exec online-bookshop-web-1 python manage.py create_groups
+```
+
+**8. Seed the database (optional):**
 ```bash
 docker exec online-bookshop-web-1 python fixture.py
 ```

@@ -4,13 +4,13 @@ from django.core.management.base import BaseCommand
 
 
 GROUPS = {
-    'Редактори каталогу': {
+    'Edit Books': {
         'books': ['book', 'author', 'genre'],
     },
-    'Менеджери замовлень': {
+    'Edit Orders': {
         'orders': ['order', 'orderitem'],
     },
-    'Адміністратори користувачів': {
+    'Edit Users': {
         'users': ['user'],
     },
 }
@@ -22,8 +22,11 @@ class Command(BaseCommand):
     help = 'Create default admin groups with permissions'
 
     def handle(self, *args, **kwargs):
+        deleted, _ = Group.objects.all().delete()
+        self.stdout.write(self.style.WARNING(f'Deleted {deleted} existing groups'))
+
         for group_name, apps in GROUPS.items():
-            group, created = Group.objects.get_or_create(name=group_name)
+            group = Group.objects.create(name=group_name)
             permissions = []
 
             for app_label, models in apps.items():
@@ -39,5 +42,4 @@ class Command(BaseCommand):
                             permissions.append(perm)
 
             group.permissions.set(permissions)
-            status = 'created' if created else 'updated'
-            self.stdout.write(self.style.SUCCESS(f'[{status}] {group_name} — {len(permissions)} permissions'))
+            self.stdout.write(self.style.SUCCESS(f'[created] {group_name} — {len(permissions)} permissions'))

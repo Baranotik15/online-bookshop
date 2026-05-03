@@ -542,7 +542,7 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
 /* ─── Book grid ─── */
 .book-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: 24px;
 }
 
@@ -558,7 +558,7 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
 .book-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
 
 .book-cover {
-    aspect-ratio: 2/3;
+    aspect-ratio: 3/2;
     background: linear-gradient(135deg, #dde3ec 0%, #c8d0de 100%);
     display: flex;
     align-items: center;
@@ -584,6 +584,17 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
     overflow: hidden;
 }
 .book-author { font-size: .8rem; color: var(--muted); }
+.book-genres { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.book-genre-tag {
+    font-size: .68rem;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: #eef1f7;
+    color: var(--navy);
+    white-space: nowrap;
+}
+
 .book-price { font-size: 1.05rem; font-weight: 700; color: var(--navy); margin-top: auto; padding-top: 8px; }
 
 .btn-primary {
@@ -772,6 +783,16 @@ footer {
 .modal-title { font-size: 1.4rem; font-weight: 700; color: var(--navy); line-height: 1.3; }
 .modal-author { font-size: .9rem; color: var(--muted); }
 .modal-price { font-size: 1.7rem; font-weight: 700; color: var(--navy); }
+.modal-genres { display: flex; flex-wrap: wrap; gap: 6px; }
+.modal-genre-tag {
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    font-size: .75rem;
+    font-weight: 500;
+}
+
 .modal-description {
     font-size: .9rem;
     line-height: 1.65;

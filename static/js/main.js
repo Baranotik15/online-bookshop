@@ -267,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authorEl  = document.getElementById('modalAuthor');
     const priceEl   = document.getElementById('modalPrice');
     const stockEl   = document.getElementById('modalStock');
+    const genresEl  = document.getElementById('modalGenres');
     const descEl    = document.getElementById('modalDescription');
     const addBtn    = document.getElementById('addToCart');
 
@@ -286,6 +287,11 @@ document.addEventListener('DOMContentLoaded', () => {
             : `<span class="stock-badge out-of-stock">&#10007; Немає в наявності</span>`;
 
         if (addBtn) addBtn.disabled = qty === 0;
+
+        if (genresEl) {
+            const names = card.dataset.genreNames ? card.dataset.genreNames.split(',') : [];
+            genresEl.innerHTML = names.map(n => `<span class="modal-genre-tag">${n.trim()}</span>`).join('');
+        }
 
         const img = card.dataset.image;
         cover.innerHTML = img

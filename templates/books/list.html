@@ -66,6 +66,7 @@
          data-author="{{ book.author.first_name }} {{ book.author.last_name }}"
          data-author-id="{{ book.author.id }}"
          data-genres="{% for g in book.genres.all %}{{ g.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+         data-genre-names="{% for g in book.genres.all %}{{ g.name }}{% if not forloop.last %},{% endif %}{% endfor %}"
          data-price="{{ book.price }}"
          data-stock="{{ book.stock }}"
          data-description="{{ book.description }}"
@@ -81,6 +82,11 @@
         <div class="book-info">
             <div class="book-title">{{ book.title }}</div>
             <div class="book-author">{{ book.author.first_name }} {{ book.author.last_name }}</div>
+            {% if book.genres.all %}
+            <div class="book-genres">
+                {% for g in book.genres.all %}<span class="book-genre-tag">{{ g.name }}</span>{% endfor %}
+            </div>
+            {% endif %}
             <div class="book-price">{{ book.price }} ₴</div>
         </div>
         <button class="btn-cart" data-book-id="{{ book.pk }}">До кошика</button>
@@ -103,6 +109,7 @@
                 <div class="modal-author" id="modalAuthor"></div>
                 <div class="modal-price" id="modalPrice"></div>
                 <div class="modal-stock" id="modalStock"></div>
+                <div class="modal-genres" id="modalGenres"></div>
                 <div class="modal-description" id="modalDescription"></div>
                 <button class="btn-buy" id="addToCart">До кошика</button>
             </div>

@@ -55,6 +55,44 @@ Single endpoint, requires authentication. All actions use `/api/cart/`.
 - `PATCH /api/cart/` — update quantity `{ "item_id": 5, "quantity": 3 }` → returns `{ subtotal, total }`
 - `DELETE /api/cart/` — remove item `{ "item_id": 5 }` → returns `{ total_items, total_price }`
 
+## 🐳 Docker
+
+**Requirements:** Docker + Docker Compose installed.
+
+**1. Fill the env file:**
+```bash
+# fill in SECRET_KEY and Stripe keys
+```
+
+**2. Build and start:**
+```bash
+docker compose up --build
+```
+
+The app will be available at **http://localhost:8000/**
+
+**3. Seed the database (optional):**
+```bash
+docker exec online-bookshop-web-1 python fixture.py
+```
+
+**4. Create a superuser:**
+```bash
+docker exec -it online-bookshop-web-1 python manage.py createsuperuser
+```
+
+**Stop containers** (data is preserved):
+```bash
+docker compose down
+```
+
+**Stop and delete all data:**
+```bash
+docker compose down -v
+```
+
+---
+
 ## 💳 Stripe (test payments)
 
 Uses Stripe Sandbox for local development.

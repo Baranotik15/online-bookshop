@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,17 +12,94 @@ load_dotenv(BASE_DIR / '.env')
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-&^c4*7^pm%e8+-d&acg+@-)$!5a03_z#0lrusuu-0_=famzg^5'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-&^c4*7^pm%e8+-d&acg+@-)$!5a03_z#0lrusuu-0_=famzg^5')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'true').lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 
 # Application definition
 
+UNFOLD = {
+    "SITE_TITLE": "BookShop",
+    "SITE_HEADER": "BookShop Admin",
+    "SITE_URL": "/",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "COLORS": {
+        "primary": {
+            "50":  "236 243 251",
+            "100": "207 225 244",
+            "200": "158 196 233",
+            "300": "109 166 221",
+            "400": "73 137 207",
+            "500": "43 108 176",
+            "600": "27 74 120",
+            "700": "18 40 64",
+            "800": "12 27 43",
+            "900": "6 14 22",
+            "950": "3 7 11",
+        },
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Каталог",
+                "separator": False,
+                "items": [
+                    {
+                        "title": "Книги",
+                        "icon": "book_2",
+                        "link": reverse_lazy("admin:books_book_changelist"),
+                    },
+                    {
+                        "title": "Автори",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:books_author_changelist"),
+                    },
+                    {
+                        "title": "Жанри",
+                        "icon": "label",
+                        "link": reverse_lazy("admin:books_genre_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Магазин",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Замовлення",
+                        "icon": "shopping_bag",
+                        "link": reverse_lazy("admin:orders_order_changelist"),
+                    },
+                    {
+                        "title": "Кошики",
+                        "icon": "shopping_cart",
+                        "link": reverse_lazy("admin:cart_cart_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Користувачі",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Користувачі",
+                        "icon": "group",
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
+}
+
 INSTALLED_APPS = [
+    'unfold',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +128,7 @@ SPECTACULAR_SETTINGS = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,12 +160,24 @@ WSGI_APPLICATION = 'proj.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.getenv('DB_HOST'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'bookshop'),
+            'USER': os.getenv('DB_USER', 'bookshop'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'bookshop'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -128,7 +219,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'

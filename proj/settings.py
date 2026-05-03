@@ -29,12 +29,24 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    #our apps
+    'drf_spectacular',
+    
+    #Our apps
     "books",
     "cart",
     "orders",
     "users",
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'BookShop API',
+    'DESCRIPTION': 'REST API for an online book store',
+    'VERSION': '1.0.0',
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

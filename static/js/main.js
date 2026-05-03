@@ -144,17 +144,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceMinVal  = document.getElementById('priceMinVal');
     const priceMaxVal  = document.getElementById('priceMaxVal');
     const rangeFill    = document.getElementById('rangeFill');
-    const genreTagEls   = document.querySelectorAll('.genre-tag');
     const activeGenres  = new Set();
+    const genreTagsContainer = document.getElementById('genreTags');
 
-    genreTagEls.forEach(tag => {
+    function attachGenreTag(tag) {
         tag.addEventListener('click', () => {
             const id = tag.dataset.genreId;
             if (activeGenres.has(id)) { activeGenres.delete(id); tag.classList.remove('active'); }
             else                      { activeGenres.add(id);    tag.classList.add('active'); }
             applyFilters();
         });
-    });
+    }
+
+    if (genreTagsContainer) {
+        fetch('/api/genres/')
+            .then(r => r.ok ? r.json() : [])
+            .then(genres => {
+                genres.forEach(g => {
+                    const btn = document.createElement('button');
+                    btn.className = 'genre-tag';
+                    btn.dataset.genreId = String(g.id);
+                    btn.textContent = g.name;
+                    attachGenreTag(btn);
+                    genreTagsContainer.appendChild(btn);
+                });
+            })
+            .catch(() => {});
+    }
 
     const authorDropdown = document.getElementById('authorDropdown');
     const authorDropdownBtn = document.getElementById('authorDropdownBtn');

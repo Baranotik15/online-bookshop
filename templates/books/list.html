@@ -50,13 +50,7 @@
     </div>
 </div>
 
-{% if genres %}
-<div class="genre-tags" id="genreTags">
-    {% for genre in genres %}
-    <button class="genre-tag" data-genre-id="{{ genre.id }}">{{ genre.name }}</button>
-    {% endfor %}
-</div>
-{% endif %}
+<div class="genre-tags" id="genreTags"></div>
 
 <div class="book-grid">
     {% for book in books %}

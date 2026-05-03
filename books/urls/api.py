@@ -1,6 +1,6 @@
 from rest_framework.routers import DefaultRouter
 
-from books.views.api import BookViewSet, AuthorViewSet
+from books.views.api import BookViewSet, AuthorViewSet, GenreViewSet
 
 
 class BookShopRouter(DefaultRouter):
@@ -14,5 +14,6 @@ class BookShopRouter(DefaultRouter):
 router = BookShopRouter()
 router.register(r'books', BookViewSet, basename='book')
 router.register(r'authors', AuthorViewSet, basename='author')
+router.register(r'genres', GenreViewSet, basename='genre')
 
 urlpatterns = router.urls

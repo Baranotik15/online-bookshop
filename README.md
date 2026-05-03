@@ -6,10 +6,11 @@ REST API for an online book store built with Django REST Framework.
 
 ## 📖 Books
 
-- `GET /api/books/` — list all books (short info)
-- `GET /api/books/{id}/` — get book details
-- `POST /api/books/` — create a new book
-- `PUT /api/books/{id}/` — update a book
+- `GET /api/books/` — list all books
+- `GET /api/books/{id}/` — get book details (includes genres, author, stock)
+- `POST /api/books/` — create a book
+- `PUT /api/books/{id}/` — replace a book
+- `PATCH /api/books/{id}/` — partial update
 - `DELETE /api/books/{id}/` — delete a book
 
 ## 👤 Authors
@@ -17,23 +18,42 @@ REST API for an online book store built with Django REST Framework.
 - `GET /api/authors/` — list all authors
 - `GET /api/authors/{id}/` — get author details
 - `POST /api/authors/` — create an author
-- `PUT /api/authors/{id}/` — update an author
+- `PUT /api/authors/{id}/` — replace an author
+- `PATCH /api/authors/{id}/` — partial update
 - `DELETE /api/authors/{id}/` — delete an author
+
+## 🏷️ Genres
+
+- `GET /api/genres/` — list all genres
+- `GET /api/genres/{id}/` — get genre details
+- `POST /api/genres/` — create a genre `{ "name": "Роман" }`
+- `PUT /api/genres/{id}/` — replace a genre
+- `PATCH /api/genres/{id}/` — partial update
+- `DELETE /api/genres/{id}/` — delete a genre
+
+When creating or updating a book, pass genre IDs via `genre_ids`:
+```json
+{ "title": "Кобзар", "author_id": 3, "price": "150.00", "genre_ids": [1, 4, 7] }
+```
 
 ## 📦 Orders
 
-- `GET /api/orders/` — list user orders
+Requires authentication.
+
+- `GET /api/orders/` — list current user's orders
 - `GET /api/orders/{id}/` — get order details
 - `POST /api/orders/` — create a new order
 - `PUT /api/orders/{id}/` — update order status
 - `DELETE /api/orders/{id}/` — cancel/delete order
 
 ## 🛒 Cart
-- `GET /api/cart/` — list all carts (или корзины пользователя)
-- `GET /api/cart/{id}/` — get cart details
-- `POST /api/cart/` — create a new cart
-- `PUT /api/cart/{id}/` — update a cart
-- `DELETE /api/cart/{id}/` — delete a cart
+
+Single endpoint, requires authentication. All actions use `/api/cart/`.
+
+- `GET /api/cart/` — get current user's cart (items + `total_price`)
+- `POST /api/cart/` — add item `{ "book_id": 1, "quantity": 1 }` → returns `{ total_items, total_price }`
+- `PATCH /api/cart/` — update quantity `{ "item_id": 5, "quantity": 3 }` → returns `{ subtotal, total }`
+- `DELETE /api/cart/` — remove item `{ "item_id": 5 }` → returns `{ total_items, total_price }`
 
 ## 💳 Stripe (test payments)
 

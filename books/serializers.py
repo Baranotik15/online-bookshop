@@ -11,10 +11,11 @@ class GenreSerializer(serializers.ModelSerializer):
 
 class BookShortSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()
+    genres = GenreSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
-        fields = ['id', 'title', 'price', 'author']
+        fields = ['id', 'title', 'price', 'author', 'genres']
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -55,6 +56,13 @@ class BookSerializer(serializers.ModelSerializer):
     )
     author_name = serializers.SerializerMethodField()
     genres = GenreSerializer(many=True, read_only=True)
+    genre_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Genre.objects.all(),
+        source='genres',
+        many=True,
+        write_only=True,
+        required=False,
+    )
 
     class Meta:
         model = Book
@@ -67,6 +75,7 @@ class BookSerializer(serializers.ModelSerializer):
             'author_id',
             'author_name',
             'genres',
+            'genre_ids',
             'stock',
             'image',
             'created_at',
@@ -76,3 +85,16 @@ class BookSerializer(serializers.ModelSerializer):
 
     def get_author_name(self, obj):
         return f"{obj.author.first_name} {obj.author.last_name}"
+
+    def create(self, validated_data):
+        genres = validated_data.pop('genres', [])
+        book = super().create(validated_data)
+        book.genres.set(genres)
+        return book
+
+    def update(self, instance, validated_data):
+        genres = validated_data.pop('genres', None)
+        book = super().update(instance, validated_data)
+        if genres is not None:
+            book.genres.set(genres)
+        return book

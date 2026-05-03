@@ -1,6 +1,16 @@
 from django.db import models
 
 
+class Genre(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ['name']
+
+
 class Author(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, null=True, blank=True)
@@ -28,6 +38,7 @@ class Book(models.Model):
 
     stock = models.PositiveIntegerField()
     image = models.ImageField(upload_to='books/', null=True, blank=True)
+    genres = models.ManyToManyField(Genre, blank=True, related_name='books')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

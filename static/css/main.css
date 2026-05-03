@@ -472,6 +472,21 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
 .author-option:hover { background: rgba(255,255,255,.08); }
 .author-option input[type="checkbox"] { accent-color: var(--gold); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
 
+.genre-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.genre-tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    color: var(--muted);
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+}
+.genre-tag:hover { border-color: var(--navy); color: var(--navy); }
+.genre-tag.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+
 .price-filter { display: flex; flex-direction: column; gap: 6px; width: 200px; flex-shrink: 0; }
 .price-filter-label { display: flex; justify-content: space-between; font-size: .8rem; color: rgba(255,255,255,.7); }
 .price-values { color: var(--gold); font-weight: 600; }

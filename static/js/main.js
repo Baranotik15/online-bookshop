@@ -130,6 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceMinVal  = document.getElementById('priceMinVal');
     const priceMaxVal  = document.getElementById('priceMaxVal');
     const rangeFill    = document.getElementById('rangeFill');
+    const genreTagEls   = document.querySelectorAll('.genre-tag');
+    const activeGenres  = new Set();
+
+    genreTagEls.forEach(tag => {
+        tag.addEventListener('click', () => {
+            const id = tag.dataset.genreId;
+            if (activeGenres.has(id)) { activeGenres.delete(id); tag.classList.remove('active'); }
+            else                      { activeGenres.add(id);    tag.classList.add('active'); }
+            applyFilters();
+        });
+    });
+
     const authorDropdown = document.getElementById('authorDropdown');
     const authorDropdownBtn = document.getElementById('authorDropdownBtn');
     const authorDropdownMenu = document.getElementById('authorDropdownMenu');
@@ -179,8 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
         allCards.forEach(card => {
             const score = fuzzyScore(q, card.dataset.title);
             const price = parseFloat(card.dataset.price);
-            const show  = score > 0 && price >= min && price <= max
-                       && (authors.size === 0 || authors.has(card.dataset.authorId));
+            const cardGenres = new Set(card.dataset.genres ? card.dataset.genres.split(',') : []);
+        const show  = score > 0 && price >= min && price <= max
+                   && (authors.size === 0 || authors.has(card.dataset.authorId))
+                   && (activeGenres.size === 0 || [...activeGenres].every(g => cardGenres.has(g)));
             card.style.display = show ? '' : 'none';
             if (show) visible++;
         });

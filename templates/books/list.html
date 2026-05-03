@@ -50,6 +50,14 @@
     </div>
 </div>
 
+{% if genres %}
+<div class="genre-tags" id="genreTags">
+    {% for genre in genres %}
+    <button class="genre-tag" data-genre-id="{{ genre.id }}">{{ genre.name }}</button>
+    {% endfor %}
+</div>
+{% endif %}
+
 <div class="book-grid">
     {% for book in books %}
     <div class="book-card"
@@ -57,6 +65,7 @@
          data-title="{{ book.title }}"
          data-author="{{ book.author.first_name }} {{ book.author.last_name }}"
          data-author-id="{{ book.author.id }}"
+         data-genres="{% for g in book.genres.all %}{{ g.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
          data-price="{{ book.price }}"
          data-stock="{{ book.stock }}"
          data-description="{{ book.description }}"

@@ -1,6 +1,12 @@
 from rest_framework import serializers
 from datetime import date
-from .models import Book, Author
+from .models import Book, Author, Genre
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ['id', 'name']
 
 
 class BookShortSerializer(serializers.ModelSerializer):
@@ -48,6 +54,7 @@ class BookSerializer(serializers.ModelSerializer):
         write_only=True
     )
     author_name = serializers.SerializerMethodField()
+    genres = GenreSerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
@@ -59,6 +66,7 @@ class BookSerializer(serializers.ModelSerializer):
             'author',
             'author_id',
             'author_name',
+            'genres',
             'stock',
             'image',
             'created_at',

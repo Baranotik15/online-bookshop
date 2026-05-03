@@ -11,7 +11,7 @@ django.setup()
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
-from books.models import Author, Book
+from books.models import Author, Book, Genre
 from orders.models import Order, OrderItem
 from cart.models import Cart, CartItem
 
@@ -62,6 +62,11 @@ DESCRIPTIONS = [
     "Сатиричний твір, що висміює людські вади та суспільні вади.",
 ]
 
+GENRES = [
+    "Роман", "Повість", "Поезія", "Драма", "Детектив",
+    "Фантастика", "Пригоди", "Історичний", "Лірика", "Сатира",
+]
+
 STATUSES = ['pending', 'paid', 'shipped', 'cancelled']
 
 HASHED_PW = make_password('password123')
@@ -83,8 +88,17 @@ async def clear_all():
     await Order.objects.all().adelete()
     await Book.objects.all().adelete()
     await Author.objects.all().adelete()
+    await Genre.objects.all().adelete()
     await User.objects.filter(is_superuser=False).adelete()
     print("Готово.\n")
+
+
+async def seed_genres():
+    print("Створення жанрів...")
+    await Genre.objects.abulk_create([Genre(name=g) for g in GENRES])
+    result = [g async for g in Genre.objects.all()]
+    print(f"  + {len(result)} жанрів")
+    return result
 
 
 async def seed_users(n=50):
@@ -122,7 +136,7 @@ async def seed_authors(n=50):
     return result
 
 
-async def seed_books(authors, n=50):
+async def seed_books(authors, genres, n=50):
     print(f"Створення {n} книг...")
     titles = random.sample(BOOK_TITLES * 2, n)
     books = [
@@ -137,6 +151,8 @@ async def seed_books(authors, n=50):
     ]
     await Book.objects.abulk_create(books)
     result = [b async for b in Book.objects.all()]
+    for book in result:
+        await book.genres.aset(random.sample(genres, random.randint(3, min(5, len(genres)))))
     print(f"  + {n} книг")
     return result
 
@@ -184,10 +200,10 @@ async def seed_carts(users, books, n=50):
 async def main():
     await clear_all()
 
-    # users і authors незалежні — паралельно
+    genres = await seed_genres()
     users, authors = await asyncio.gather(seed_users(50), seed_authors(50))
 
-    books = await seed_books(authors, 50)
+    books = await seed_books(authors, genres, 50)
 
     # orders і carts незалежні — паралельно
     await asyncio.gather(seed_orders(users, books, 50), seed_carts(users, books, 50))
@@ -200,6 +216,7 @@ async def main():
     print(f"  Orders:     {await Order.objects.acount()}")
     print(f"  OrderItems: {await OrderItem.objects.acount()}")
     print(f"  Carts:      {await Cart.objects.acount()}")
+    print(f"  Genres:     {await Genre.objects.acount()}")
     print(f"  CartItems:  {await CartItem.objects.acount()}")
 
 

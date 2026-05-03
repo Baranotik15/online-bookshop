@@ -29,7 +29,11 @@ class CartAPIView(APIView):
             item.save()
 
         total_items = cart.items.count()
-        return Response({'ok': True, 'total_items': total_items}, status=status.HTTP_200_OK)
+        total_price = sum(
+            i.book.price * i.quantity
+            for i in cart.items.select_related('book').all()
+        )
+        return Response({'ok': True, 'total_items': total_items, 'total_price': str(total_price)}, status=status.HTTP_200_OK)
 
     def patch(self, request):
         item_id = request.data.get('item_id')
@@ -52,4 +56,10 @@ class CartAPIView(APIView):
     def delete(self, request):
         item_id = request.data.get('item_id')
         CartItem.objects.filter(id=item_id, cart__user=request.user).delete()
-        return Response({'ok': True})
+        cart, _ = Cart.objects.get_or_create(user=request.user)
+        total_items = cart.items.count()
+        total_price = sum(
+            i.book.price * i.quantity
+            for i in cart.items.select_related('book').all()
+        )
+        return Response({'ok': True, 'total_items': total_items, 'total_price': str(total_price)})

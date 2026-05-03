@@ -55,6 +55,13 @@
         return m ? m[2] : null;
     }
 
+    function syncHeader(totalItems, totalPrice) {
+        const countEl = document.getElementById('cartCount');
+        const sumEl   = document.getElementById('cartSum');
+        if (countEl) countEl.textContent = totalItems;
+        if (sumEl) sumEl.textContent = parseFloat(totalPrice) > 0 ? Math.round(parseFloat(totalPrice)) + ' ₴' : '';
+    }
+
     function setEmpty() {
         document.getElementById('cartItems').remove();
         document.getElementById('cartFooter').remove();
@@ -64,24 +71,26 @@
         document.querySelector('.cart-card').appendChild(empty);
     }
 
-    document.querySelectorAll('.cart-remove-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const itemId = btn.dataset.itemId;
-            const res = await fetch('/api/cart/', {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                body: JSON.stringify({ item_id: itemId }),
-            });
-            if (!res.ok) return;
-
-            document.getElementById('cartRow-' + itemId).remove();
-
-            const remaining = document.querySelectorAll('.cart-item-row').length;
-            const countEl = document.getElementById('cartCount');
-            if (countEl) countEl.textContent = remaining;
-
-            if (remaining === 0) { setEmpty(); }
+    async function deleteItem(itemId) {
+        const res = await fetch('/api/cart/', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+            body: JSON.stringify({ item_id: itemId }),
         });
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('cartRow-' + itemId).remove();
+        syncHeader(data.total_items, data.total_price);
+
+        if (data.total_items === 0) { setEmpty(); }
+        else if (document.getElementById('cartTotalVal')) {
+            document.getElementById('cartTotalVal').textContent = data.total_price + ' ₴';
+        }
+    }
+
+    document.querySelectorAll('.cart-remove-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteItem(btn.dataset.itemId));
     });
 
     document.querySelectorAll('.qty-btn').forEach(btn => {
@@ -91,20 +100,7 @@
             const current = parseInt(qtyEl.textContent, 10);
             const next = btn.dataset.action === 'inc' ? current + 1 : current - 1;
 
-            if (next < 1) {
-                const delRes = await fetch('/api/cart/', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                    body: JSON.stringify({ item_id: itemId }),
-                });
-                if (!delRes.ok) return;
-                document.getElementById('cartRow-' + itemId).remove();
-                const remaining = document.querySelectorAll('.cart-item-row').length;
-                const countEl = document.getElementById('cartCount');
-                if (countEl) countEl.textContent = remaining;
-                if (remaining === 0) { setEmpty(); }
-                return;
-            }
+            if (next < 1) { deleteItem(itemId); return; }
 
             const res = await fetch('/api/cart/', {
                 method: 'PATCH',
@@ -117,6 +113,7 @@
             qtyEl.textContent = next;
             document.querySelector(`#cartRow-${itemId} .cart-item-subtotal`).textContent = data.subtotal + ' ₴';
             document.getElementById('cartTotalVal').textContent = data.total + ' ₴';
+            syncHeader(document.querySelectorAll('.cart-item-row').length, data.total);
         });
     });
 }());

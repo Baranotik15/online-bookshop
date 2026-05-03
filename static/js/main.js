@@ -25,21 +25,34 @@ document.addEventListener('DOMContentLoaded', () => {
     function showToast(msg, isError = false) {
         toast.textContent = msg;
         toast.style.background = isError ? '#b91c1c' : '#1e293b';
+        toast.classList.remove('show');
+        void toast.offsetWidth;
         toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
     // ─── Cart count ───────────────────────────────────────────
     const cartCount = document.getElementById('cartCount');
+    const cartSum   = document.getElementById('cartSum');
 
     function updateCartCount(n) {
         if (cartCount) cartCount.textContent = n;
     }
 
+    function updateCartSum(total) {
+        if (!cartSum) return;
+        const n = parseFloat(total);
+        cartSum.textContent = n > 0 ? Math.round(n) + ' ₴' : '';
+    }
+
     if (cartCount) {
         fetch('/api/cart/')
             .then(r => r.ok ? r.json() : null)
-            .then(data => { if (data) updateCartCount(data.items.length); })
+            .then(data => {
+                if (data) {
+                    updateCartCount(data.items.length);
+                    updateCartSum(data.total_price);
+                }
+            })
             .catch(() => {});
     }
 
@@ -64,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await res.json();
             updateCartCount(data.total_items);
+            updateCartSum(data.total_price);
             showToast('Додано до кошика ✓');
         } catch {
             showToast('Помилка з\'єднання', true);

@@ -557,7 +557,7 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
 /* ─── Book grid ─── */
 .book-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 24px;
 }
 
@@ -573,14 +573,14 @@ main { flex: 1; max-width: 1200px; width: 100%; margin: 0 auto; padding: 36px 24
 .book-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
 
 .book-cover {
-    aspect-ratio: 3/2;
+    aspect-ratio: 4/3;
     background: linear-gradient(135deg, #dde3ec 0%, #c8d0de 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
 }
-.book-cover img { width: 100%; height: 100%; object-fit: cover; }
+.book-cover img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 .book-cover .no-cover {
     font-size: 3rem;
     opacity: .35;

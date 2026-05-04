@@ -25,11 +25,11 @@ services:
       DB_USER: bookshop
       DB_PASSWORD: bookshop
     volumes:
-      - media_data:/app/media
+      - /opt/online-bookshop/media:/app/media
+      - /opt/online-bookshop/staticfiles:/app/staticfiles
     depends_on:
       db:
         condition: service_healthy
 
 volumes:
   postgres_data:
-  media_data:

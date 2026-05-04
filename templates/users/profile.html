@@ -48,6 +48,13 @@
                 <div class="order-items">
                     {% for item in order.items.all %}
                     <div class="order-item">
+                        <div class="cart-item-cover">
+                            {% if item.book.image %}
+                                <img src="{{ item.book.image.url }}" alt="{{ item.book.title }}">
+                            {% else %}
+                                <span>📖</span>
+                            {% endif %}
+                        </div>
                         <span class="order-item-title">{{ item.book.title }}</span>
                         <span class="order-item-qty">× {{ item.quantity }}</span>
                         <span class="order-item-price">{{ item.price }} ₴</span>

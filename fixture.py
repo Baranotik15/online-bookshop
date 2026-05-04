@@ -155,7 +155,7 @@ def fetch_cover(book, image_filename):
     try:
         path = os.path.join(IMAGES_DIR, image_filename)
         with open(path, 'rb') as f:
-            book.image.save(image_filename, ContentFile(f.read()), save=True)
+            book.image.save(image_filename, ContentFile(f.read()), save=False)
     except Exception:
         pass
 
@@ -190,7 +190,11 @@ async def seed_books(genres):
         if book:
             fetch_cover(book, data['image'])
 
-    covers = sum(1 for b in result if b.image)
+    books_with_images = [b for b in result if b.image]
+    if books_with_images:
+        await Book.objects.abulk_update(books_with_images, ['image'])
+
+    covers = len(books_with_images)
     print(f"  + {n} книг, {covers} обкладинок завантажено")
     return result
 

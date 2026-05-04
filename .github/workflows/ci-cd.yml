@@ -50,3 +50,5 @@ jobs:
             docker compose up -d --build
             docker compose exec -T web python manage.py migrate
             docker compose exec -T web python manage.py collectstatic --noinput
+            sudo cp /opt/online-bookshop/nginx.conf /etc/nginx/sites-available/bookshop
+            sudo nginx -t && sudo systemctl reload nginx

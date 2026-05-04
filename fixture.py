@@ -150,6 +150,8 @@ IMAGES_DIR = os.path.join(os.path.dirname(__file__), 'images_for_fixture')
 
 
 def fetch_cover(book, image_filename):
+    if not os.getenv('AWS_ACCESS_KEY_ID'):
+        return
     try:
         path = os.path.join(IMAGES_DIR, image_filename)
         with open(path, 'rb') as f:

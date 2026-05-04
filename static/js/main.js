@@ -162,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (genreTagsContainer) {
         fetch('/api/genres/')
             .then(r => r.ok ? r.json() : [])
-            .then(genres => {
+            .then(data => {
+                const genres = Array.isArray(data) ? data : (data.results || []);
                 genres.forEach(g => {
                     const btn = document.createElement('button');
                     btn.className = 'genre-tag';

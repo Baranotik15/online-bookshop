@@ -65,8 +65,8 @@ def test_list_only_own_orders(auth_client, user, other_user):
 
     r = auth_client.get('/api/orders/')
     assert r.status_code == status.HTTP_200_OK
-    assert len(r.data) == 1
-    assert r.data[0]['user_email'] == user.email
+    assert len(r.data['results']) == 1
+    assert r.data['results'][0]['user_email'] == user.email
 
 
 # --- Create ---

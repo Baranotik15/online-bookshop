@@ -3,6 +3,9 @@ import os
 import random
 from decimal import Decimal
 from datetime import date, timedelta
+from concurrent.futures import ThreadPoolExecutor
+import requests
+from django.core.files.base import ContentFile
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
 
@@ -34,19 +37,57 @@ LAST_NAMES = [
     "Zinchenko", "Rudenko", "Horobets", "Karpenko", "Sereda", "Hrytsenko",
 ]
 
-BOOK_TITLES = [
-    "Тіні забутих предків", "Захар Беркут", "Лісова пісня", "Кайдашева сім'я",
-    "Земля", "Місто", "Вир", "Людина і зброя", "Собор", "Тронка",
-    "Циклон", "Берег любові", "Диво", "Три листки за вікном", "Вогнепоклонники",
-    "Жовтий князь", "Марія", "Чорна рада", "Хіба ревуть воли", "Бур'ян",
-    "Майстер корабля", "Вершники", "Мальви", "Смерть і воїн", "Дорогою ціною",
-    "Під чужими зорями", "Голос трави", "Рай і люди", "Птахи з невидимого острова",
-    "Зачарована Десна", "Ніч перед Різдвом", "Кобзар", "Мартин Боруля",
-    "Украдене щастя", "Пісня про рушник", "Мороз", "Поема про море",
-    "Сонячна машина", "Місяцева зозуля", "Зимові дерева", "Степ", "Орда",
-    "Залізний острів", "Криниця для спраглих", "Дорога", "Листя землі",
-    "Чотири броди", "Похорон богів", "Перший удар", "Зелені святки",
-    "Щоденник", "Вибране", "На полі крові", "Сімнадцятий патруль", "Холодний яр",
+BOOKS_DATA = [
+    {"title": "Кобзар", "first_name": "Тарас", "last_name": "Шевченко"},
+    {"title": "Лісова пісня", "first_name": "Леся", "last_name": "Українка"},
+    {"title": "Тіні забутих предків", "first_name": "Михайло", "last_name": "Коцюбинський"},
+    {"title": "Захар Беркут", "first_name": "Іван", "last_name": "Франко"},
+    {"title": "Кайдашева сім'я", "first_name": "Іван", "last_name": "Нечуй-Левицький"},
+    {"title": "Чорна рада", "first_name": "Пантелеймон", "last_name": "Куліш"},
+    {"title": "Хіба ревуть воли, як ясла повні?", "first_name": "Панас", "last_name": "Мирний"},
+    {"title": "Зачарована Десна", "first_name": "Олександр", "last_name": "Довженко"},
+    {"title": "Мартин Боруля", "first_name": "Іван", "last_name": "Карпенко-Карий"},
+    {"title": "Украдене щастя", "first_name": "Іван", "last_name": "Франко"},
+    {"title": "Земля", "first_name": "Ольга", "last_name": "Кобилянська"},
+    {"title": "Людина і зброя", "first_name": "Олесь", "last_name": "Гончар"},
+    {"title": "Собор", "first_name": "Олесь", "last_name": "Гончар"},
+    {"title": "Тронка", "first_name": "Олесь", "last_name": "Гончар"},
+    {"title": "Жовтий князь", "first_name": "Василь", "last_name": "Барка"},
+    {"title": "Холодний яр", "first_name": "Юрій", "last_name": "Горліс-Горський"},
+    {"title": "Майстер і Маргарита", "first_name": "Михайло", "last_name": "Булгаков"},
+    {"title": "1984", "first_name": "Джордж", "last_name": "Оруелл"},
+    {"title": "Колгосп тварин", "first_name": "Джордж", "last_name": "Оруелл"},
+    {"title": "Маленький принц", "first_name": "Антуан де", "last_name": "Сент-Екзюпері"},
+    {"title": "Три мушкетери", "first_name": "Александр", "last_name": "Дюма"},
+    {"title": "Граф Монте-Крісто", "first_name": "Александр", "last_name": "Дюма"},
+    {"title": "Злочин і кара", "first_name": "Федір", "last_name": "Достоєвський"},
+    {"title": "Війна і мир", "first_name": "Лев", "last_name": "Толстой"},
+    {"title": "Анна Кареніна", "first_name": "Лев", "last_name": "Толстой"},
+    {"title": "Гаррі Поттер і філософський камінь", "first_name": "Джоан", "last_name": "Роулінг"},
+    {"title": "Гаррі Поттер і таємна кімната", "first_name": "Джоан", "last_name": "Роулінг"},
+    {"title": "Гаррі Поттер і в'язень Азкабану", "first_name": "Джоан", "last_name": "Роулінг"},
+    {"title": "Володар перснів: Хранителі персня", "first_name": "Джон", "last_name": "Толкін"},
+    {"title": "Хоббіт", "first_name": "Джон", "last_name": "Толкін"},
+    {"title": "Дюна", "first_name": "Френк", "last_name": "Герберт"},
+    {"title": "Автостопом по галактиці", "first_name": "Дуглас", "last_name": "Адамс"},
+    {"title": "Над прірвою в житі", "first_name": "Джером", "last_name": "Селінджер"},
+    {"title": "Великий Гетсбі", "first_name": "Френсіс Скотт", "last_name": "Фіцджеральд"},
+    {"title": "Старий і море", "first_name": "Ернест", "last_name": "Хемінгуей"},
+    {"title": "Убити пересмішника", "first_name": "Гарпер", "last_name": "Лі"},
+    {"title": "Сто років самотності", "first_name": "Габріель Гарсія", "last_name": "Маркес"},
+    {"title": "Алхімік", "first_name": "Пауло", "last_name": "Коельо"},
+    {"title": "П'ять мов любові", "first_name": "Гері", "last_name": "Чепмен"},
+    {"title": "Думай і багатій", "first_name": "Наполеон", "last_name": "Гілл"},
+    {"title": "Атлант розправив плечі", "first_name": "Айн", "last_name": "Ренд"},
+    {"title": "Гра Ендера", "first_name": "Орсон Скотт", "last_name": "Кард"},
+    {"title": "Матриця", "first_name": "Вільям", "last_name": "Гібсон"},
+    {"title": "Брати Карамазови", "first_name": "Федір", "last_name": "Достоєвський"},
+    {"title": "Мертві душі", "first_name": "Микола", "last_name": "Гоголь"},
+    {"title": "Ревізор", "first_name": "Микола", "last_name": "Гоголь"},
+    {"title": "Ніч перед Різдвом", "first_name": "Микола", "last_name": "Гоголь"},
+    {"title": "Пригоди Тома Сойєра", "first_name": "Марк", "last_name": "Твен"},
+    {"title": "Пригоди Гекльберрі Фінна", "first_name": "Марк", "last_name": "Твен"},
+    {"title": "Дон Кіхот", "first_name": "Мігель де", "last_name": "Сервантес"},
 ]
 
 DESCRIPTIONS = [
@@ -136,24 +177,56 @@ async def seed_authors(n=50):
     return result
 
 
-async def seed_books(authors, genres, n=50):
+def fetch_cover(book):
+    try:
+        query = requests.utils.quote(f'{book.title} {book.author}')
+        api_url = f'https://www.googleapis.com/books/v1/volumes?q={query}&maxResults=1'
+        data = requests.get(api_url, timeout=10).json()
+        items = data.get('items', [])
+        if not items:
+            return
+        links = items[0].get('volumeInfo', {}).get('imageLinks', {})
+        image_url = links.get('large') or links.get('medium') or links.get('thumbnail')
+        if not image_url:
+            return
+        image_url = image_url.replace('http://', 'https://')
+        img_data = requests.get(image_url, timeout=10).content
+        book.image.save(f'{book.id}.jpg', ContentFile(img_data), save=True)
+    except Exception:
+        pass
+
+
+async def seed_books(genres):
+    n = len(BOOKS_DATA)
     print(f"Створення {n} книг...")
-    titles = random.sample(BOOK_TITLES * 2, n)
-    books = [
-        Book(
-            title=title,
+
+    books = []
+    for data in BOOKS_DATA:
+        author, _ = await Author.objects.aget_or_create(
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+        )
+        books.append(Book(
+            title=data['title'],
             description=random.choice(DESCRIPTIONS),
             price=Decimal(str(round(random.uniform(80, 650), 2))),
-            author=random.choice(authors),
-            stock=random.randint(0, 100),
-        )
-        for title in titles
-    ]
+            author=author,
+            stock=random.randint(1, 100),
+        ))
+
     await Book.objects.abulk_create(books)
     result = [b async for b in Book.objects.all()]
     for book in result:
-        await book.genres.aset(random.sample(genres, random.randint(3, min(5, len(genres)))))
-    print(f"  + {n} книг")
+        await book.genres.aset(random.sample(genres, random.randint(1, min(4, len(genres)))))
+
+    print("  Завантаження обкладинок...")
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [loop.run_in_executor(executor, fetch_cover, book) for book in result]
+        await asyncio.gather(*futures)
+
+    covers = sum(1 for b in result if b.image)
+    print(f"  + {n} книг, {covers} обкладинок завантажено")
     return result
 
 
@@ -201,9 +274,9 @@ async def main():
     await clear_all()
 
     genres = await seed_genres()
-    users, authors = await asyncio.gather(seed_users(50), seed_authors(50))
+    users = await seed_users(50)
 
-    books = await seed_books(authors, genres, 50)
+    books = await seed_books(genres)
 
     # orders і carts незалежні — паралельно
     await asyncio.gather(seed_orders(users, books, 50), seed_carts(users, books, 50))
@@ -212,7 +285,7 @@ async def main():
     print("БД заповнена успішно!")
     print(f"  Users:      {await User.objects.filter(is_superuser=False).acount()}")
     print(f"  Authors:    {await Author.objects.acount()}")
-    print(f"  Books:      {await Book.objects.acount()}")
+    print(f"  Books:      {await Book.objects.acount()} ({len(BOOKS_DATA)} унікальних)")
     print(f"  Orders:     {await Order.objects.acount()}")
     print(f"  OrderItems: {await OrderItem.objects.acount()}")
     print(f"  Carts:      {await Cart.objects.acount()}")

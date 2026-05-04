@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 
 class Genre(models.Model):
@@ -44,3 +46,9 @@ class Book(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.author})"
+
+
+@receiver(post_delete, sender=Book)
+def delete_book_image(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(save=False)

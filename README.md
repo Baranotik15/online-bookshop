@@ -1,4 +1,13 @@
 # online-bookshop
+
+Online bookstore built with Django REST Framework. Features a web UI, shopping cart, orders, and Stripe payments. Supports S3 media storage, email confirmation on registration, role-based admin panel, and CI/CD deployment to EC2.
+
+**Site preview:** (http://13.223.155.69/) 
+
+![Site preview](static/site_preview.png)
+
+## Database schema
+
 ![Database schema](static/table_schema.png)
 
 # 📚 Bookshop API
@@ -223,6 +232,67 @@ docker compose down             # stop (data preserved)
 docker compose down -v          # stop and delete all data
 docker compose up -d            # start after server reboot
 ```
+
+---
+
+## 🌐 Nginx (reverse proxy)
+
+The file [`nginx.conf`](nginx.conf) is included in the repository and gets copied to the server automatically on every deploy.
+
+**What it does:**
+- Proxies all requests to Django (port 8000)
+- Serves static files directly from `/opt/online-bookshop/staticfiles/`
+- Serves media files directly from `/opt/online-bookshop/media/` (only when S3 is not used)
+
+**One-time setup on the server (first deploy only):**
+```bash
+# Copy config and enable site
+sudo cp /opt/online-bookshop/nginx.conf /etc/nginx/sites-available/bookshop
+sudo ln -s /etc/nginx/sites-available/bookshop /etc/nginx/sites-enabled/bookshop
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Test and reload
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+After the first setup, nginx config is updated automatically on every deploy via CI/CD.
+
+**To use a domain instead of IP**, replace `server_name _;` in `nginx.conf` with your domain:
+```nginx
+server_name yourdomain.com www.yourdomain.com;
+```
+
+---
+
+## ☁️ AWS S3 (media storage)
+
+Used for storing book cover images in production. Without S3, images are stored locally in `media/`.
+
+**Setup:**
+1. Create an S3 bucket (e.g. `online-bookshop-media`)
+2. In bucket **Permissions → Block public access** — disable all blocks
+3. Add **Bucket policy** for public read:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::your-bucket-name/*"
+  }]
+}
+```
+4. Create an IAM user with `AmazonS3FullAccess`, generate Access Key
+5. Add to `.env`:
+```
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
+AWS_STORAGE_BUCKET_NAME=online-bookshop-media
+AWS_S3_REGION_NAME=us-east-1
+```
+
+When `AWS_ACCESS_KEY_ID` is set, Django automatically uses S3 for all media uploads.
 
 ---
 

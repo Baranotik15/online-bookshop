@@ -899,3 +899,30 @@ footer {
 }
 .cart-total { font-size: 1rem; color: var(--muted); }
 .cart-total strong { color: var(--navy); font-size: 1.2rem; font-weight: 700; }
+
+/* ─── Pagination ─── */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 36px;
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: .9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+    font-family: inherit;
+}
+
+.page-btn:hover:not(:disabled) { border-color: var(--navy); color: var(--navy); }
+.page-btn.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.page-btn:disabled { opacity: .4; cursor: default; }

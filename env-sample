@@ -21,3 +21,9 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 # DB_NAME=bookshop
 # DB_USER=bookshop
 # DB_PASSWORD=bookshop
+
+# AWS S3 (for media file storage)
+AWS_ACCESS_KEY_ID=your-access-key-id
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+AWS_STORAGE_BUCKET_NAME=online-bookshop-media
+AWS_S3_REGION_NAME=us-east-1

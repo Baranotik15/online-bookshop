@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.core import signing
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from django import forms
 
 from users.models import User
@@ -27,6 +29,11 @@ class RegisterForm(forms.ModelForm):
         p2 = self.cleaned_data.get('password2')
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError('Паролі не збігаються')
+        if p1:
+            try:
+                validate_password(p1)
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
         return p2
 
     def save(self, commit=True):
@@ -46,6 +53,15 @@ class EditProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'email']
+
+    def clean_new_password(self):
+        pw = self.cleaned_data.get('new_password')
+        if pw:
+            try:
+                validate_password(pw)
+            except ValidationError as e:
+                raise forms.ValidationError(e.messages)
+        return pw
 
     def save(self, commit=True):
         user = super().save(commit=False)

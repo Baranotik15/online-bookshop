@@ -34,7 +34,7 @@ def test_list_genres(client):
     Genre.objects.create(name='Поезія')
     r = client.get('/api/genres/')
     assert r.status_code == status.HTTP_200_OK
-    assert len(r.data) == 2
+    assert len(r.data['results']) == 2
 
 
 @pytest.mark.django_db
@@ -71,7 +71,7 @@ def test_duplicate_genre_rejected(client, genre):
 def test_list_authors(client):
     r = client.get('/api/authors/')
     assert r.status_code == status.HTTP_200_OK
-    assert len(r.data) == 1
+    assert len(r.data['results']) == 1
 
 
 @pytest.mark.django_db
@@ -109,16 +109,16 @@ def test_list_books(client, author):
     Book.objects.create(title='Книга 2', price=Decimal('200.00'), stock=5, author=author)
     r = client.get('/api/books/')
     assert r.status_code == status.HTTP_200_OK
-    assert len(r.data) == 2
+    assert len(r.data['results']) == 2
 
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures('book')
 def test_book_list_short_serializer(client):
     r = client.get('/api/books/')
-    assert 'title' in r.data[0]
-    assert 'genres' in r.data[0]
-    assert 'description' not in r.data[0]
+    assert 'title' in r.data['results'][0]
+    assert 'genres' in r.data['results'][0]
+    assert 'description' not in r.data['results'][0]
 
 
 @pytest.mark.django_db

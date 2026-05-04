@@ -226,6 +226,37 @@ docker compose up -d            # start after server reboot
 
 ---
 
+## ⚙️ CI/CD (GitHub Actions)
+
+The workflow file is located at [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).
+
+**How it works:**
+- Every push or PR to `main` → runs the test suite with coverage check (min 80%)
+- Every push to `main` (after tests pass) → automatically deploys to EC2 via SSH
+
+**Required GitHub Secrets** (`Settings → Secrets and variables → Actions`):
+
+| Secret | Description |
+|--------|-------------|
+| `SECRET_KEY` | Django secret key |
+| `EC2_HOST` | EC2 public IP address |
+| `EC2_USER` | SSH user on the server (e.g. `ubuntu`) |
+| `EC2_SSH_KEY` | Private SSH key for connecting to EC2 |
+
+**Setting up the SSH key on the server:**
+```bash
+ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/github_actions -N ""
+cat ~/.ssh/github_actions.pub >> ~/.ssh/authorized_keys
+cat ~/.ssh/github_actions   # copy this into EC2_SSH_KEY secret
+```
+
+**To change the coverage threshold**, edit the `--cov-fail-under` flag in `ci-cd.yml`:
+```yaml
+run: pytest --cov=. --cov-report=term-missing --cov-fail-under=80
+```
+
+---
+
 ## 💳 Stripe (test payments)
 
 Uses Stripe Sandbox for local development.

@@ -139,6 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput  = document.getElementById('searchInput');
     const bookCount    = document.getElementById('bookCount');
     const allCards     = document.querySelectorAll('.book-card');
+    const PAGE_SIZE    = 12;
+    let currentPage    = 1;
+    let matchingCards  = [];
     const priceMinEl   = document.getElementById('priceMin');
     const priceMaxEl   = document.getElementById('priceMax');
     const priceMinVal  = document.getElementById('priceMinVal');
@@ -217,18 +220,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const min     = priceMinEl ? parseFloat(priceMinEl.value) : 0;
         const max     = priceMaxEl ? parseFloat(priceMaxEl.value) : Infinity;
         const authors = getSelectedAuthors();
-        let visible = 0;
+        matchingCards = [];
         allCards.forEach(card => {
             const score = fuzzyScore(q, card.dataset.title);
             const price = parseFloat(card.dataset.price);
             const cardGenres = new Set(card.dataset.genres ? card.dataset.genres.split(',') : []);
-        const show  = score > 0 && price >= min && price <= max
-                   && (authors.size === 0 || authors.has(card.dataset.authorId))
-                   && (activeGenres.size === 0 || [...activeGenres].every(g => cardGenres.has(g)));
-            card.style.display = show ? '' : 'none';
-            if (show) visible++;
+            const match = score > 0 && price >= min && price <= max
+                       && (authors.size === 0 || authors.has(card.dataset.authorId))
+                       && (activeGenres.size === 0 || [...activeGenres].every(g => cardGenres.has(g)));
+            if (match) matchingCards.push(card);
+            else card.style.display = 'none';
         });
-        if (bookCount) bookCount.textContent = visible + ' книг';
+        if (bookCount) bookCount.textContent = matchingCards.length + ' книг';
+        renderPage(1);
+    }
+
+    function renderPage(page) {
+        currentPage = page;
+        const start = (page - 1) * PAGE_SIZE;
+        const end   = start + PAGE_SIZE;
+        matchingCards.forEach((card, i) => {
+            card.style.display = (i >= start && i < end) ? '' : 'none';
+        });
+        renderPagination();
+    }
+
+    function renderPagination() {
+        const container = document.getElementById('pagination');
+        if (!container) return;
+        const totalPages = Math.ceil(matchingCards.length / PAGE_SIZE);
+        container.innerHTML = '';
+        if (totalPages <= 1) return;
+
+        const prev = document.createElement('button');
+        prev.className = 'page-btn';
+        prev.innerHTML = '&larr;';
+        prev.disabled = currentPage === 1;
+        prev.addEventListener('click', () => renderPage(currentPage - 1));
+        container.appendChild(prev);
+
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+            btn.textContent = i;
+            const p = i;
+            btn.addEventListener('click', () => renderPage(p));
+            container.appendChild(btn);
+        }
+
+        const next = document.createElement('button');
+        next.className = 'page-btn';
+        next.innerHTML = '&rarr;';
+        next.disabled = currentPage === totalPages;
+        next.addEventListener('click', () => renderPage(currentPage + 1));
+        container.appendChild(next);
     }
 
     function updateSlider() {
@@ -286,6 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    if (allCards.length) applyFilters();
 
     // ─── Book modal ───────────────────────────────────────────
     const overlay   = document.getElementById('bookModal');

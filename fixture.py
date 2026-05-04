@@ -3,8 +3,6 @@ import os
 import random
 from decimal import Decimal
 from datetime import date, timedelta
-from concurrent.futures import ThreadPoolExecutor
-import requests
 from django.core.files.base import ContentFile
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
@@ -38,56 +36,27 @@ LAST_NAMES = [
 ]
 
 BOOKS_DATA = [
-    {"title": "Кобзар", "first_name": "Тарас", "last_name": "Шевченко"},
-    {"title": "Лісова пісня", "first_name": "Леся", "last_name": "Українка"},
-    {"title": "Тіні забутих предків", "first_name": "Михайло", "last_name": "Коцюбинський"},
-    {"title": "Захар Беркут", "first_name": "Іван", "last_name": "Франко"},
-    {"title": "Кайдашева сім'я", "first_name": "Іван", "last_name": "Нечуй-Левицький"},
-    {"title": "Чорна рада", "first_name": "Пантелеймон", "last_name": "Куліш"},
-    {"title": "Хіба ревуть воли, як ясла повні?", "first_name": "Панас", "last_name": "Мирний"},
-    {"title": "Зачарована Десна", "first_name": "Олександр", "last_name": "Довженко"},
-    {"title": "Мартин Боруля", "first_name": "Іван", "last_name": "Карпенко-Карий"},
-    {"title": "Украдене щастя", "first_name": "Іван", "last_name": "Франко"},
-    {"title": "Земля", "first_name": "Ольга", "last_name": "Кобилянська"},
-    {"title": "Людина і зброя", "first_name": "Олесь", "last_name": "Гончар"},
-    {"title": "Собор", "first_name": "Олесь", "last_name": "Гончар"},
-    {"title": "Тронка", "first_name": "Олесь", "last_name": "Гончар"},
-    {"title": "Жовтий князь", "first_name": "Василь", "last_name": "Барка"},
-    {"title": "Холодний яр", "first_name": "Юрій", "last_name": "Горліс-Горський"},
-    {"title": "Майстер і Маргарита", "first_name": "Михайло", "last_name": "Булгаков"},
-    {"title": "1984", "first_name": "Джордж", "last_name": "Оруелл"},
-    {"title": "Колгосп тварин", "first_name": "Джордж", "last_name": "Оруелл"},
-    {"title": "Маленький принц", "first_name": "Антуан де", "last_name": "Сент-Екзюпері"},
-    {"title": "Три мушкетери", "first_name": "Александр", "last_name": "Дюма"},
-    {"title": "Граф Монте-Крісто", "first_name": "Александр", "last_name": "Дюма"},
-    {"title": "Злочин і кара", "first_name": "Федір", "last_name": "Достоєвський"},
-    {"title": "Війна і мир", "first_name": "Лев", "last_name": "Толстой"},
-    {"title": "Анна Кареніна", "first_name": "Лев", "last_name": "Толстой"},
-    {"title": "Гаррі Поттер і філософський камінь", "first_name": "Джоан", "last_name": "Роулінг"},
-    {"title": "Гаррі Поттер і таємна кімната", "first_name": "Джоан", "last_name": "Роулінг"},
-    {"title": "Гаррі Поттер і в'язень Азкабану", "first_name": "Джоан", "last_name": "Роулінг"},
-    {"title": "Володар перснів: Хранителі персня", "first_name": "Джон", "last_name": "Толкін"},
-    {"title": "Хоббіт", "first_name": "Джон", "last_name": "Толкін"},
-    {"title": "Дюна", "first_name": "Френк", "last_name": "Герберт"},
-    {"title": "Автостопом по галактиці", "first_name": "Дуглас", "last_name": "Адамс"},
-    {"title": "Над прірвою в житі", "first_name": "Джером", "last_name": "Селінджер"},
-    {"title": "Великий Гетсбі", "first_name": "Френсіс Скотт", "last_name": "Фіцджеральд"},
-    {"title": "Старий і море", "first_name": "Ернест", "last_name": "Хемінгуей"},
-    {"title": "Убити пересмішника", "first_name": "Гарпер", "last_name": "Лі"},
-    {"title": "Сто років самотності", "first_name": "Габріель Гарсія", "last_name": "Маркес"},
-    {"title": "Алхімік", "first_name": "Пауло", "last_name": "Коельо"},
-    {"title": "П'ять мов любові", "first_name": "Гері", "last_name": "Чепмен"},
-    {"title": "Думай і багатій", "first_name": "Наполеон", "last_name": "Гілл"},
-    {"title": "Атлант розправив плечі", "first_name": "Айн", "last_name": "Ренд"},
-    {"title": "Гра Ендера", "first_name": "Орсон Скотт", "last_name": "Кард"},
-    {"title": "Матриця", "first_name": "Вільям", "last_name": "Гібсон"},
-    {"title": "Брати Карамазови", "first_name": "Федір", "last_name": "Достоєвський"},
-    {"title": "Мертві душі", "first_name": "Микола", "last_name": "Гоголь"},
-    {"title": "Ревізор", "first_name": "Микола", "last_name": "Гоголь"},
-    {"title": "Ніч перед Різдвом", "first_name": "Микола", "last_name": "Гоголь"},
-    {"title": "Пригоди Тома Сойєра", "first_name": "Марк", "last_name": "Твен"},
-    {"title": "Пригоди Гекльберрі Фінна", "first_name": "Марк", "last_name": "Твен"},
-    {"title": "Дон Кіхот", "first_name": "Мігель де", "last_name": "Сервантес"},
+    {"title": "Хоробний новий світ",       "first_name": "Олдос",         "last_name": "Гакслі",          "image": "01.jpg"},
+    {"title": "Кайдашева сім'я",            "first_name": "Іван",          "last_name": "Нечуй-Левицький", "image": "02.jpg"},
+    {"title": "Собор Паризької Богоматері", "first_name": "Віктор",        "last_name": "Гюго",            "image": "03.jpg"},
+    {"title": "Подорож до центру Землі",    "first_name": "Жюль",          "last_name": "Верн",            "image": "04.jpg"},
+    {"title": "Холодний яр",                "first_name": "Юрій",          "last_name": "Горліс-Горський", "image": "05.jpg"},
+    {"title": "Прощавай, зброє!",           "first_name": "Ернест",        "last_name": "Хемінгуей",       "image": "06.jpg"},
+    {"title": "Маленький принц",            "first_name": "Антуан де",     "last_name": "Сент-Екзюпері",   "image": "07.jpg"},
+    {"title": "Гаррі Поттер і філософський камінь", "first_name": "Джоан", "last_name": "Роулінг",         "image": "08.jpg"},
+    {"title": "Код да Вінчі",               "first_name": "Ден",           "last_name": "Браун",           "image": "09.jpg"},
+    {"title": "Джерело",                    "first_name": "Ден",           "last_name": "Браун",           "image": "10.jpg"},
+    {"title": "Хранителі персня",           "first_name": "Джон",          "last_name": "Толкін",          "image": "11.jpg"},
+    {"title": "Гобіт",                      "first_name": "Джон",          "last_name": "Толкін",          "image": "12.jpg"},
+    {"title": "Кривава меридіана",          "first_name": "Кормак",        "last_name": "Маккарті",        "image": "13.jpg"},
+    {"title": "Великий Гетсбі",             "first_name": "Френсіс Скотт", "last_name": "Фіцджеральд",     "image": "14.jpg"},
+    {"title": "Убити пересмішника",         "first_name": "Гарпер",        "last_name": "Лі",              "image": "15.jpg"},
+    {"title": "П'ять мов любові",           "first_name": "Гері",          "last_name": "Чепмен",          "image": "16.jpg"},
+    {"title": "Гра Ендера",                 "first_name": "Орсон Скотт",   "last_name": "Кард",            "image": "17.jpg"},
+    {"title": "Записки з підпілля",         "first_name": "Федір",         "last_name": "Достоєвський",    "image": "18.jpg"},
+    {"title": "Мертві душі",                "first_name": "Микола",        "last_name": "Гоголь",          "image": "19.jpg"},
+    {"title": "Принц і жебрак",             "first_name": "Марк",          "last_name": "Твен",            "image": "20.jpg"},
+    {"title": "Нейромант",                  "first_name": "Вільям",        "last_name": "Гібсон",          "image": "21.jpg"},
 ]
 
 DESCRIPTIONS = [
@@ -177,21 +146,16 @@ async def seed_authors(n=50):
     return result
 
 
-def fetch_cover(book):
+IMAGES_DIR = os.path.join(os.path.dirname(__file__), 'images_for_fixture')
+
+
+def fetch_cover(book, image_filename):
+    if not os.getenv('AWS_ACCESS_KEY_ID'):
+        return
     try:
-        query = requests.utils.quote(f'{book.title} {book.author}')
-        api_url = f'https://www.googleapis.com/books/v1/volumes?q={query}&maxResults=1'
-        data = requests.get(api_url, timeout=10).json()
-        items = data.get('items', [])
-        if not items:
-            return
-        links = items[0].get('volumeInfo', {}).get('imageLinks', {})
-        image_url = links.get('large') or links.get('medium') or links.get('thumbnail')
-        if not image_url:
-            return
-        image_url = image_url.replace('http://', 'https://')
-        img_data = requests.get(image_url, timeout=10).content
-        book.image.save(f'{book.id}.jpg', ContentFile(img_data), save=True)
+        path = os.path.join(IMAGES_DIR, image_filename)
+        with open(path, 'rb') as f:
+            book.image.save(image_filename, ContentFile(f.read()), save=True)
     except Exception:
         pass
 
@@ -220,10 +184,11 @@ async def seed_books(genres):
         await book.genres.aset(random.sample(genres, random.randint(1, min(4, len(genres)))))
 
     print("  Завантаження обкладинок...")
-    loop = asyncio.get_event_loop()
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = [loop.run_in_executor(executor, fetch_cover, book) for book in result]
-        await asyncio.gather(*futures)
+    book_map = {b.title: b for b in result}
+    for data in BOOKS_DATA:
+        book = book_map.get(data['title'])
+        if book:
+            fetch_cover(book, data['image'])
 
     covers = sum(1 for b in result if b.image)
     print(f"  + {n} книг, {covers} обкладинок завантажено")

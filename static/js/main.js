@@ -221,17 +221,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const min     = priceMinEl ? parseFloat(priceMinEl.value) : 0;
         const max     = priceMaxEl ? parseFloat(priceMaxEl.value) : Infinity;
         const authors = getSelectedAuthors();
-        matchingCards = [];
+        const scored  = [];
+
         allCards.forEach(card => {
             const score = fuzzyScore(q, card.dataset.title);
             const price = parseFloat(card.dataset.price);
             const cardGenres = new Set(card.dataset.genres ? card.dataset.genres.split(',') : []);
-            const match = score > 0 && price >= min && price <= max
-                       && (authors.size === 0 || authors.has(card.dataset.authorId))
-                       && (activeGenres.size === 0 || [...activeGenres].every(g => cardGenres.has(g)));
-            if (match) matchingCards.push(card);
-            else card.style.display = 'none';
+            const genreMatches = activeGenres.size === 0
+                ? 0
+                : [...activeGenres].filter(g => cardGenres.has(g)).length;
+
+            const baseMatch = score > 0 && price >= min && price <= max
+                           && (authors.size === 0 || authors.has(card.dataset.authorId));
+
+            if (baseMatch && (activeGenres.size === 0 || genreMatches > 0)) {
+                scored.push({ card, genreMatches });
+            } else {
+                card.style.display = 'none';
+            }
         });
+
+        if (activeGenres.size > 0) {
+            scored.sort((a, b) => b.genreMatches - a.genreMatches);
+        }
+
+        matchingCards = scored.map(s => s.card);
         if (bookCount) bookCount.textContent = matchingCards.length + ' книг';
         renderPage(1);
     }

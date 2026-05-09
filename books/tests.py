@@ -34,7 +34,7 @@ def test_list_genres(client):
     Genre.objects.create(name='Поезія')
     r = client.get('/api/genres/')
     assert r.status_code == status.HTTP_200_OK
-    assert len(r.data['results']) == 2
+    assert len(r.data) == 2
 
 
 @pytest.mark.django_db
@@ -71,7 +71,7 @@ def test_duplicate_genre_rejected(client, genre):
 def test_list_authors(client):
     r = client.get('/api/authors/')
     assert r.status_code == status.HTTP_200_OK
-    assert len(r.data['results']) == 1
+    assert len(r.data) == 1
 
 
 @pytest.mark.django_db

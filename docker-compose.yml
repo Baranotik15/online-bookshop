@@ -13,6 +13,14 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build: .
     ports:
@@ -24,11 +32,14 @@ services:
       DB_NAME: bookshop
       DB_USER: bookshop
       DB_PASSWORD: bookshop
+      REDIS_URL: redis://redis:6379/1
     volumes:
       - /opt/online-bookshop/media:/app/media
       - /opt/online-bookshop/staticfiles:/app/staticfiles
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:

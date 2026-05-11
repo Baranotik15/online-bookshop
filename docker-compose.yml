@@ -33,9 +33,28 @@ services:
       DB_USER: bookshop
       DB_PASSWORD: bookshop
       REDIS_URL: redis://redis:6379/1
+      CELERY_BROKER_URL: redis://redis:6379/2
     volumes:
       - /opt/online-bookshop/media:/app/media
       - /opt/online-bookshop/staticfiles:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery:
+    build: .
+    command: celery -A proj worker -l info
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      DB_NAME: bookshop
+      DB_USER: bookshop
+      DB_PASSWORD: bookshop
+      REDIS_URL: redis://redis:6379/1
+      CELERY_BROKER_URL: redis://redis:6379/2
     depends_on:
       db:
         condition: service_healthy

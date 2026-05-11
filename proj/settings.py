@@ -177,7 +177,7 @@ WSGI_APPLICATION = 'proj.wsgi.application'
 if os.getenv('DB_HOST'):
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'django_prometheus.db.backends.postgresql',
             'NAME': os.getenv('DB_NAME', 'bookshop'),
             'USER': os.getenv('DB_USER', 'bookshop'),
             'PASSWORD': os.getenv('DB_PASSWORD', 'bookshop'),
@@ -188,7 +188,7 @@ if os.getenv('DB_HOST'):
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
+            'ENGINE': 'django_prometheus.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }

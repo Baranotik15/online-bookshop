@@ -382,6 +382,32 @@ truncate -s 0 $(docker inspect --format='{{.LogPath}}' online-bookshop-web-1)
 
 ---
 
+## 📊 Monitoring (Prometheus + Grafana)
+
+Prometheus scrapes Django metrics every 15s. Grafana visualises them.
+
+**Access:**
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| Prometheus | `http://your-ip:9090` | — |
+| Grafana | `http://your-ip:3000` | admin / admin |
+
+> **First login:** Grafana will ask you to change the admin password. Do it.
+
+**Dashboard panels (auto-loaded on first start):**
+| Panel | What it shows |
+|-------|---------------|
+| HTTP Request Rate | Requests/s broken down by status code (2xx, 4xx, 5xx) |
+| Request Latency | Response time p50 and p95 in seconds |
+| DB Queries/s | SQL queries per second (django-prometheus) |
+| Redis Cache Hit Rate | Cache hit percentage (genres / authors caching) |
+
+**Port setup on EC2** — open ports 9090 and 3000 in AWS Security Group (Inbound rules → Custom TCP).
+
+**Metrics endpoint** is exposed at `/metrics` by `django-prometheus`. Prometheus scrapes it internally via `web:8000` (Docker network). You don't need port 9090 open for scraping to work — only for browser access to the Prometheus UI.
+
+---
+
 ## ⚙️ CI/CD (GitHub Actions)
 
 The workflow file is located at [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).

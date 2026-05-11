@@ -1,3 +1,5 @@
+import logging
+
 import stripe
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -7,6 +9,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from orders.models import Order
+
+logger = logging.getLogger('orders')
 
 
 @login_required
@@ -26,11 +30,19 @@ def stripe_webhook(request):
 
     try:
         event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
-    except (ValueError, stripe.error.SignatureVerificationError):
+    except ValueError:
+        logger.error('Stripe webhook: invalid payload')
+        return HttpResponse(status=400)
+    except stripe.error.SignatureVerificationError:
+        logger.error('Stripe webhook: invalid signature — possible spoofing attempt')
         return HttpResponse(status=400)
 
     if event['type'] == 'checkout.session.completed':
         session = event['data']['object']
-        Order.objects.filter(stripe_session_id=session['id']).update(status='paid')
+        updated = Order.objects.filter(stripe_session_id=session['id']).update(status='paid')
+        if updated:
+            logger.info('Order paid via Stripe session %s', session['id'])
+        else:
+            logger.error('Stripe webhook: no order found for session %s', session['id'])
 
     return HttpResponse(status=200)

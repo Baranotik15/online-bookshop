@@ -116,7 +116,6 @@ INSTALLED_APPS = [
     "cart",
     "orders",
     "users",
-    'django_prometheus',
 ]
 
 REST_FRAMEWORK = {

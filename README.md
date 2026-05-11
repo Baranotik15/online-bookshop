@@ -386,6 +386,8 @@ truncate -s 0 $(docker inspect --format='{{.LogPath}}' online-bookshop-web-1)
 
 Prometheus scrapes Django metrics every 15s. Grafana visualises them.
 
+![Grafana dashboard](static/Grafana_preview.png)
+
 **Access:**
 | Service | URL | Credentials |
 |---------|-----|-------------|

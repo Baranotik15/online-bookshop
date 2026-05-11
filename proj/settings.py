@@ -99,6 +99,7 @@ UNFOLD = {
 }
 
 INSTALLED_APPS = [
+    'django_prometheus',
     'unfold',
     'django.contrib.admin',
     'storages',
@@ -109,12 +110,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drf_spectacular',
-    
+
     #Our apps
     "books",
     "cart",
     "orders",
     "users",
+    'django_prometheus',
 ]
 
 REST_FRAMEWORK = {
@@ -138,6 +140,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -146,6 +149,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
 ]
 
 ROOT_URLCONF = 'proj.urls'

@@ -864,6 +864,30 @@ footer {
     .modal-body { grid-template-columns: 1fr; }
     .modal-cover { max-width: 160px; }
     .cart-card { padding: 20px 16px; }
+
+    /* Profile: actions wrap to second row */
+    .profile-header { flex-wrap: wrap; padding: 20px; gap: 16px; }
+    .profile-actions { width: 100%; margin-left: 0; padding-top: 12px; border-top: 1px solid var(--border); justify-content: flex-end; }
+
+    /* Cart item: 2-row grid layout */
+    .cart-item-row {
+        display: grid;
+        grid-template-columns: 48px 1fr auto;
+        grid-template-areas: "cover info remove" "cover qty subtotal";
+        gap: 4px 10px;
+        align-items: center;
+    }
+    .cart-item-cover  { grid-area: cover; align-self: center; }
+    .cart-item-info   { grid-area: info; }
+    .cart-remove-btn  { grid-area: remove; }
+    .cart-item-qty    { grid-area: qty; }
+    .cart-item-price  { display: none; }
+    .cart-item-subtotal { grid-area: subtotal; min-width: unset; }
+    .cart-item-title  { white-space: normal; }
+
+    /* Cart footer: stack total and checkout button */
+    .cart-footer { flex-direction: column; align-items: stretch; gap: 12px; }
+    .cart-footer .btn-submit { width: 100% !important; text-align: center; box-sizing: border-box; }
 }
 
 .cart-btn { text-decoration: none; }

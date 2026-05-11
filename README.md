@@ -296,6 +296,23 @@ When `AWS_ACCESS_KEY_ID` is set, Django automatically uses S3 for all media uplo
 
 ---
 
+## 🔴 Redis (caching)
+
+Used for caching genre and author list responses. Reduces DB load on every page load.
+
+- Genres (`/api/genres/`) and authors are cached for **5 minutes**
+- Cache is automatically invalidated on create/update/delete
+- Redis runs as a separate Docker service (database `1`)
+
+Redis is included in `docker-compose.yml` and starts automatically with `docker compose up`. No additional setup required.
+
+**To inspect cached keys:**
+```bash
+docker compose exec redis redis-cli -n 1 KEYS "*"
+```
+
+---
+
 ## ⚙️ CI/CD (GitHub Actions)
 
 The workflow file is located at [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).

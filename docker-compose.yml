@@ -37,6 +37,11 @@ services:
     volumes:
       - /opt/online-bookshop/media:/app/media
       - /opt/online-bookshop/staticfiles:/app/staticfiles
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       db:
         condition: service_healthy
@@ -55,6 +60,11 @@ services:
       DB_PASSWORD: bookshop
       REDIS_URL: redis://redis:6379/1
       CELERY_BROKER_URL: redis://redis:6379/2
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       db:
         condition: service_healthy

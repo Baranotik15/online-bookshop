@@ -1,3 +1,5 @@
+import logging
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -10,6 +12,8 @@ from django import forms
 from users.models import User
 from users.tasks import send_confirmation_email
 from orders.models import Order
+
+logger = logging.getLogger('users')
 
 CONFIRM_SALT = 'email-confirmation'
 CONFIRM_MAX_AGE = 60 * 60 * 24  # 24 hours
@@ -82,6 +86,7 @@ def register(request):
             token = signing.dumps(user.pk, salt=CONFIRM_SALT)
             confirm_url = request.build_absolute_uri(f'/confirm-email/{token}/')
             send_confirmation_email.delay(user.pk, confirm_url)
+            logger.info('User registered: %s (pk=%s)', user.email, user.pk)
             return render(request, 'users/register.html', {
                 'form': RegisterForm(),
                 'email_sent': True,
@@ -98,12 +103,15 @@ def confirm_email(request, token):
         user = User.objects.get(pk=user_pk)
         user.is_active = True
         user.save()
+        logger.info('Email confirmed for user pk=%s', user_pk)
         messages.success(request, 'Email підтверджено! Тепер ви можете увійти.')
         return redirect('/login/')
     except signing.SignatureExpired:
+        logger.error('Confirmation link expired for token: %s', token[:20])
         messages.error(request, 'Посилання для підтвердження застаріло. Зареєструйтесь знову.')
         return redirect('/register/')
     except (signing.BadSignature, User.DoesNotExist):
+        logger.error('Invalid confirmation token: %s', token[:20])
         messages.error(request, 'Невалідне посилання для підтвердження.')
         return redirect('/register/')
 

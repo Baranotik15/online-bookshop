@@ -353,6 +353,35 @@ docker compose exec redis redis-cli -n 1 KEYS "*"
 
 ---
 
+## 📋 Logging
+
+Errors and key business events are logged to stdout and collected by Docker.
+
+**What is logged:**
+| Event | Level |
+|-------|-------|
+| User registered | INFO |
+| Email confirmation sent / failed | INFO / ERROR |
+| Email confirmed | INFO |
+| Order paid via Stripe | INFO |
+| Stripe webhook invalid signature | ERROR |
+| Django 500 errors | ERROR |
+
+**View logs in real time:**
+```bash
+docker compose logs -f web     # Django logs
+docker compose logs -f celery  # Celery task logs
+```
+
+**Log rotation** is configured automatically — max 10 MB per file, last 3 files kept (30 MB total per service). No manual cleanup needed.
+
+**To clear logs manually if needed:**
+```bash
+truncate -s 0 $(docker inspect --format='{{.LogPath}}' online-bookshop-web-1)
+```
+
+---
+
 ## ⚙️ CI/CD (GitHub Actions)
 
 The workflow file is located at [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml).

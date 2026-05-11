@@ -14,6 +14,19 @@ Online bookstore built with Django REST Framework. Features a web UI, shopping c
 
 REST API for an online book store built with Django REST Framework.
 
+## 🚦 Rate Limiting
+
+All API endpoints are throttled to prevent abuse:
+
+| Client | Limit |
+|--------|-------|
+| Anonymous (by IP) | 10 requests / minute |
+| Authenticated (by user ID) | 60 requests / minute |
+
+When the limit is exceeded the API returns `429 Too Many Requests` with a `Retry-After` header indicating how many seconds to wait.
+
+To change the limits, edit `DEFAULT_THROTTLE_RATES` in `proj/settings.py`.
+
 ## 📖 Books
 
 - `GET /api/books/` — list all books

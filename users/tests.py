@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group
 from rest_framework.test import APIClient
 
 from .models import User
+from .tasks import send_confirmation_email
 
 
 @pytest.fixture
@@ -172,6 +173,29 @@ def test_edit_profile_post_updates_username(client, active_user):
     assert r.status_code == 302
     active_user.refresh_from_db()
     assert active_user.username == 'newname'
+
+
+# --- Celery task ---
+
+@pytest.mark.django_db
+def test_send_confirmation_email_task(active_user):
+    with patch('users.tasks.send_mail') as mock_send:
+        send_confirmation_email(active_user.pk, 'http://example.com/confirm/token/')
+        mock_send.assert_called_once()
+        _, kwargs = mock_send.call_args
+        assert active_user.email in kwargs.get('recipient_list', [])
+
+
+@pytest.mark.django_db
+def test_register_triggers_email_task(client):
+    with patch('users.views.web.send_confirmation_email.delay') as mock_delay:
+        client.post('/register/', {
+            'email': 'celery@example.com',
+            'username': 'celeryuser',
+            'password1': 'StrongPass123!',
+            'password2': 'StrongPass123!',
+        })
+        mock_delay.assert_called_once()
 
 
 # --- Management command ---

@@ -3,13 +3,12 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core import signing
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django import forms
 
 from users.models import User
+from users.tasks import send_confirmation_email
 from orders.models import Order
 
 CONFIRM_SALT = 'email-confirmation'
@@ -73,22 +72,6 @@ class EditProfileForm(forms.ModelForm):
         return user
 
 
-def _send_confirmation_email(request, user):
-    token = signing.dumps(user.pk, salt=CONFIRM_SALT)
-    confirm_url = request.build_absolute_uri(f'/confirm-email/{token}/')
-    body = render_to_string('users/email_confirm.html', {
-        'user': user,
-        'confirm_url': confirm_url,
-    })
-    send_mail(
-        subject='Підтвердіть email — BookShop',
-        message=body,
-        from_email=None,
-        recipient_list=[user.email],
-        fail_silently=False,
-    )
-
-
 def register(request):
     if request.user.is_authenticated:
         return redirect('/')
@@ -96,7 +79,9 @@ def register(request):
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
-            _send_confirmation_email(request, user)
+            token = signing.dumps(user.pk, salt=CONFIRM_SALT)
+            confirm_url = request.build_absolute_uri(f'/confirm-email/{token}/')
+            send_confirmation_email.delay(user.pk, confirm_url)
             return render(request, 'users/register.html', {
                 'form': RegisterForm(),
                 'email_sent': True,

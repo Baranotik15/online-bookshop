@@ -119,7 +119,7 @@ cp env-sample .env
 # fill in SECRET_KEY and Stripe keys
 ```
 
-> **Email confirmation** is required on registration. Locally, emails print to the console by default (`EMAIL_BACKEND=console`). To use real SMTP (e.g. Gmail), set these in `.env`:
+> **Email confirmation** is required on registration. Locally, emails print to the console by default (`EMAIL_BACKEND=console`). The confirmation email template is at `templates/users/email_confirm.html`. To use real SMTP (e.g. Gmail), set these in `.env`:
 > ```
 > EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 > EMAIL_HOST=smtp.gmail.com
@@ -293,6 +293,33 @@ AWS_S3_REGION_NAME=us-east-1
 ```
 
 When `AWS_ACCESS_KEY_ID` is set, Django automatically uses S3 for all media uploads.
+
+---
+
+## 🟢 Celery (background tasks)
+
+Used for sending confirmation emails asynchronously so the user gets an instant response after registration without waiting for SMTP.
+
+**How it works:**
+1. User registers → Django puts a task in the Redis queue (database `2`) and immediately returns a response
+2. Celery worker picks up the task and sends the email in the background
+
+Celery worker runs as a separate Docker service and starts automatically with `docker compose up`.
+
+**To view worker logs:**
+```bash
+docker compose logs -f celery
+```
+
+**To inspect queued tasks:**
+```bash
+docker compose exec redis redis-cli -n 2 KEYS "*"
+```
+
+**Email template** — edit the confirmation email at:
+```
+templates/users/email_confirm.html
+```
 
 ---
 

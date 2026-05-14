@@ -408,6 +408,21 @@ Prometheus scrapes Django metrics every 15s. Grafana visualises them.
 
 **Metrics endpoint** is exposed at `/metrics` by `django-prometheus`. Prometheus scrapes it internally via `web:8000` (Docker network). You don't need port 9090 open for scraping to work — only for browser access to the Prometheus UI.
 
+**Host metrics** (CPU, RAM, Disk) are collected by Node Exporter running as a separate Docker service.
+
+**Email alerting** — Grafana sends an email notification when any of the following conditions occur:
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| CPU Usage > 90% | Sustained for 2 min | warning |
+| RAM Usage > 85% | Sustained for 2 min | warning |
+| Disk Usage > 80% | Sustained for 5 min | warning |
+| Django Service Down | No response for 1 min | critical |
+
+Alerts repeat every **4 hours** while the problem persists. SMTP settings are taken from `.env` automatically — no extra config needed if email confirmation is already configured.
+
+To change thresholds or recipient address, edit `grafana/provisioning/alerting/rules.yml` and `contact-points.yml`.
+
 ---
 
 ## ⚙️ CI/CD (GitHub Actions)

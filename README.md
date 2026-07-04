@@ -281,7 +281,14 @@ server_name yourdomain.com www.yourdomain.com;
 
 Used for storing book cover images in production. Without S3, images are stored locally in `media/`.
 
-**Setup:**
+**If provisioned via [Terraform](#🏗️-terraform-aws-infrastructure)** — the bucket, public read policy, and an IAM instance role are created automatically. Just add to `.env` on the server:
+```
+AWS_STORAGE_BUCKET_NAME=online-bookshop-media
+AWS_S3_REGION_NAME=us-east-1
+```
+No access keys needed — the EC2 instance's IAM role grants it S3 access.
+
+**Manual setup (no Terraform):**
 1. Create an S3 bucket (e.g. `online-bookshop-media`)
 2. In bucket **Permissions → Block public access** — disable all blocks
 3. Add **Bucket policy** for public read:
@@ -305,7 +312,59 @@ AWS_STORAGE_BUCKET_NAME=online-bookshop-media
 AWS_S3_REGION_NAME=us-east-1
 ```
 
-When `AWS_ACCESS_KEY_ID` is set, Django automatically uses S3 for all media uploads.
+When `AWS_STORAGE_BUCKET_NAME` is set, Django automatically uses S3 for all media uploads (with explicit keys if present, otherwise the instance's IAM role).
+
+---
+
+## 🏗️ Terraform (AWS infrastructure)
+
+Provisions the app's infrastructure: [`main.tf`](main.tf) creates a security group (ports 22, 80, 9090, 3000), generates an SSH key pair, launches an Ubuntu 24.04 `t3.small` instance with a static Elastic IP and an IAM instance role (S3 read/write on the media bucket, no access keys needed on the server), and creates the S3 bucket itself (public read policy, matching the manual setup described [above](#☁️-aws-s3-media-storage)).
+
+The instance installs Docker and Docker Compose automatically on boot via `user_data` — no manual SSH setup needed before deploying. The S3 bucket has `prevent_destroy` set, so a stray `terraform destroy` won't wipe uploaded book covers (destroy it manually in the AWS console if you really need to).
+
+**Install Terraform:**
+```bash
+# Windows (winget)
+winget install HashiCorp.Terraform
+
+# Windows (choco)
+choco install terraform
+
+# macOS
+brew install terraform
+
+# Linux
+sudo apt update && sudo apt install -y terraform
+```
+
+Check it installed correctly:
+```bash
+terraform -version
+```
+
+**Setup:**
+1. Create an IAM user in AWS with `AmazonEC2FullAccess`, `AmazonS3FullAccess`, and `IAMFullAccess` (needed to create the instance role), generate an Access Key (use case: **Command Line Interface (CLI)**)
+2. Copy the example vars file and fill in your keys:
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
+`terraform.tfvars` ([example here](terraform.tfvars.example)) is already gitignored — your keys never get committed.
+
+**Usage:**
+```bash
+terraform init    # downloads providers (aws, tls, local)
+terraform plan     # preview what will be created — review before applying
+terraform apply    # create the resources
+```
+
+The S3 bucket name gets a random suffix appended (`bucket_name` + random hex, e.g. `online-bookshop-media-a1b2c3d4`) since S3 bucket names must be globally unique across **all** AWS accounts, not just yours.
+
+After `apply`, Terraform outputs the instance's public (Elastic) IP, its private IP, the actual S3 bucket name (`s3_bucket_name`), and the path to the generated `.pem` private key (used to SSH into the box and, later, as the `EC2_SSH_KEY` GitHub secret). Copy the `s3_bucket_name` output into `AWS_STORAGE_BUCKET_NAME` in `.env` on the server.
+
+To tear everything down:
+```bash
+terraform destroy
+```
 
 ---
 

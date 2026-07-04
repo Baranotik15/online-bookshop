@@ -56,3 +56,15 @@ htmlcov/
 # =========================
 .mypy_cache/
 .dmypy.json
+
+# =========================
+# Terraform
+# =========================
+*.tfvars
+*.tfvars.json
+.terraform/
+*.tfstate
+*.tfstate.*
+*.pem
+crash.log
+crash.*.log

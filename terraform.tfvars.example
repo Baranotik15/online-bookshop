@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────
+# HOW TO USE:
+#   cp terraform.tfvars.example terraform.tfvars
+#   Fill in the values below
+#   Never commit terraform.tfvars to git
+# ─────────────────────────────────────────────
+
+# AWS IAM user access key (Access Key ID)
+aws_access_key = "AKIA..."
+
+# AWS IAM user secret key
+aws_secret_key = "..."
+
+# AWS region
+aws_region = "us-east-1"
+
+# EC2 instance type
+instance_type = "t3.small"
+
+# Name for the generated SSH key pair
+key_name = "bookshop-key"
+
+# Base name for the S3 bucket — a random suffix is appended automatically
+# to keep it globally unique (e.g. online-bookshop-media-a1b2c3d4)
+bucket_name = "online-bookshop-media"

@@ -372,30 +372,28 @@ terraform destroy
 [`deploy.sh`](deploy.sh) automates everything after `terraform apply` except the secrets, which only you can provide.
 
 **What it does, in order:**
-1. If `.env` doesn't exist yet — creates it from `env-sample` and stops, asking you to fill in secrets first
-2. Checks that `SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` are present in `.env` **and** aren't still the `env-sample` placeholders — if anything's missing or unfilled, it lists what and stops (nothing gets deployed)
-3. Once all of those are filled in, it detects the instance's public IP via EC2 instance metadata, and writes/overwrites `DEBUG=false`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, and `ALLOWED_HOSTS` in `.env` — these four are always kept in sync with the current environment, unlike the secrets
-4. Runs `docker compose up --build -d`
-5. Installs nginx if missing, copies `nginx.conf`, enables the site, reloads nginx
+1. Figures out the S3 bucket name — reads it from `~/.bookshop-bucket-name` (written automatically by terraform's `user_data` when the instance was created), or from an explicit `./deploy.sh <bucket-name>` argument if you pass one (needed only if that file is missing, e.g. an older instance)
+2. If `.env` doesn't exist yet — creates it from `env-sample` and stops, asking you to fill in secrets first
+3. Checks that `SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` are present in `.env` **and** aren't still the `env-sample` placeholders — if anything's missing or unfilled, it lists what and stops (nothing gets deployed)
+4. Once all of those are filled in, it detects the instance's public IP via EC2 instance metadata, and writes/overwrites `DEBUG=false`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, and `ALLOWED_HOSTS` in `.env` — these four are always kept in sync with the current environment, unlike the secrets
+5. Runs `docker compose up --build -d`
+6. Runs `collectstatic` inside the running container — needed because `staticfiles/` is bind-mounted from the host, which shadows whatever `collectstatic` produced inside the image at build time
+7. Installs nginx if missing, copies `nginx.conf`, enables the site, reloads nginx
 
 **First deploy onto a fresh instance:**
-```bash
-# locally — get the bucket name to paste into the server session below
-terraform output -raw s3_bucket_name
-```
 ```bash
 ssh -i bookshop-key.pem ubuntu@<instance_public_ip>
 git clone https://github.com/your-username/online-bookshop.git
 cd online-bookshop
 cp env-sample .env && nano .env   # fill in SECRET_KEY, Stripe keys, email settings — one-time only
 chmod +x deploy.sh
-./deploy.sh <bucket-name-from-above>
+./deploy.sh
 ```
 
 **Redeploying later** (after a `git pull` with new code) — same command, safe to re-run:
 ```bash
 git pull
-./deploy.sh <bucket-name>
+./deploy.sh
 ```
 
 Your filled-in secrets in `.env` are never touched on subsequent runs — only the four environment-specific fields get refreshed.

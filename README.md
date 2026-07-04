@@ -211,10 +211,11 @@ EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=BookShop <your@gmail.com>
 ```
 
-**4. Add your domain or IP to `ALLOWED_HOSTS` in `proj/settings.py`:**
-```python
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'your-domain.com', 'your-ec2-ip']
+**4. Add your domain or IP to `.env`** (comma-separated, no spaces):
 ```
+ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com,your-ec2-ip,web
+```
+Defaults to `localhost,127.0.0.1,0.0.0.0,13.223.155.69,web` if unset. If you use [`deploy.sh`](deploy.sh) (see [Terraform](#🏗️-terraform-aws-infrastructure) section), this is set automatically.
 
 **5. Build and start:**
 ```bash
@@ -281,7 +282,14 @@ server_name yourdomain.com www.yourdomain.com;
 
 Used for storing book cover images in production. Without S3, images are stored locally in `media/`.
 
-**Setup:**
+**If provisioned via [Terraform](#🏗️-terraform-aws-infrastructure)** — the bucket, public read policy, and an IAM instance role are created automatically. Just add to `.env` on the server:
+```
+AWS_STORAGE_BUCKET_NAME=online-bookshop-media
+AWS_S3_REGION_NAME=us-east-1
+```
+No access keys needed — the EC2 instance's IAM role grants it S3 access.
+
+**Manual setup (no Terraform):**
 1. Create an S3 bucket (e.g. `online-bookshop-media`)
 2. In bucket **Permissions → Block public access** — disable all blocks
 3. Add **Bucket policy** for public read:
@@ -305,7 +313,92 @@ AWS_STORAGE_BUCKET_NAME=online-bookshop-media
 AWS_S3_REGION_NAME=us-east-1
 ```
 
-When `AWS_ACCESS_KEY_ID` is set, Django automatically uses S3 for all media uploads.
+When `AWS_STORAGE_BUCKET_NAME` is set, Django automatically uses S3 for all media uploads (with explicit keys if present, otherwise the instance's IAM role).
+
+---
+
+## 🏗️ Terraform (AWS infrastructure)
+
+Provisions the app's infrastructure: [`main.tf`](main.tf) creates a security group (ports 22, 80, 9090, 3000), generates an SSH key pair, launches an Ubuntu 24.04 `t3.small` instance with a static Elastic IP and an IAM instance role (S3 read/write on the media bucket, no access keys needed on the server), and creates the S3 bucket itself (public read policy, matching the manual setup described [above](#☁️-aws-s3-media-storage)).
+
+The instance installs Docker and Docker Compose automatically on boot via `user_data` — no manual SSH setup needed before deploying. The S3 bucket has `prevent_destroy` set, so a stray `terraform destroy` won't wipe uploaded book covers (destroy it manually in the AWS console if you really need to).
+
+**Install Terraform:**
+```bash
+# Windows (winget)
+winget install HashiCorp.Terraform
+
+# Windows (choco)
+choco install terraform
+
+# macOS
+brew install terraform
+
+# Linux
+sudo apt update && sudo apt install -y terraform
+```
+
+Check it installed correctly:
+```bash
+terraform -version
+```
+
+**Setup:**
+1. Create an IAM user in AWS with `AmazonEC2FullAccess`, `AmazonS3FullAccess`, and `IAMFullAccess` (needed to create the instance role), generate an Access Key (use case: **Command Line Interface (CLI)**)
+2. Copy the example vars file and fill in your keys:
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
+`terraform.tfvars` ([example here](terraform.tfvars.example)) is already gitignored — your keys never get committed.
+
+**Usage:**
+```bash
+terraform init    # downloads providers (aws, tls, local)
+terraform plan     # preview what will be created — review before applying
+terraform apply    # create the resources
+```
+
+The S3 bucket name gets a random suffix appended (`bucket_name` + random hex, e.g. `online-bookshop-media-a1b2c3d4`) since S3 bucket names must be globally unique across **all** AWS accounts, not just yours.
+
+After `apply`, Terraform outputs the instance's public (Elastic) IP, its private IP, the actual S3 bucket name (`s3_bucket_name`), and the path to the generated `.pem` private key (used to SSH into the box and, later, as the `EC2_SSH_KEY` GitHub secret). Copy the `s3_bucket_name` output into `AWS_STORAGE_BUCKET_NAME` in `.env` on the server.
+
+To tear everything down:
+```bash
+terraform destroy
+```
+
+### 🚢 Deploying with `deploy.sh`
+
+[`deploy.sh`](deploy.sh) automates everything after `terraform apply` except the secrets, which only you can provide.
+
+**What it does, in order:**
+1. If `.env` doesn't exist yet — creates it from `env-sample` and stops, asking you to fill in secrets first
+2. Checks that `SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` are present in `.env` **and** aren't still the `env-sample` placeholders — if anything's missing or unfilled, it lists what and stops (nothing gets deployed)
+3. Once all of those are filled in, it detects the instance's public IP via EC2 instance metadata, and writes/overwrites `DEBUG=false`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, and `ALLOWED_HOSTS` in `.env` — these four are always kept in sync with the current environment, unlike the secrets
+4. Runs `docker compose up --build -d`
+5. Installs nginx if missing, copies `nginx.conf`, enables the site, reloads nginx
+
+**First deploy onto a fresh instance:**
+```bash
+# locally — get the bucket name to paste into the server session below
+terraform output -raw s3_bucket_name
+```
+```bash
+ssh -i bookshop-key.pem ubuntu@<instance_public_ip>
+git clone https://github.com/your-username/online-bookshop.git
+cd online-bookshop
+cp env-sample .env && nano .env   # fill in SECRET_KEY, Stripe keys, email settings — one-time only
+chmod +x deploy.sh
+./deploy.sh <bucket-name-from-above>
+```
+
+**Redeploying later** (after a `git pull` with new code) — same command, safe to re-run:
+```bash
+git pull
+./deploy.sh <bucket-name>
+```
+
+Your filled-in secrets in `.env` are never touched on subsequent runs — only the four environment-specific fields get refreshed.
 
 ---
 
@@ -407,6 +500,21 @@ Prometheus scrapes Django metrics every 15s. Grafana visualises them.
 **Port setup on EC2** — open ports 9090 and 3000 in AWS Security Group (Inbound rules → Custom TCP).
 
 **Metrics endpoint** is exposed at `/metrics` by `django-prometheus`. Prometheus scrapes it internally via `web:8000` (Docker network). You don't need port 9090 open for scraping to work — only for browser access to the Prometheus UI.
+
+**Host metrics** (CPU, RAM, Disk) are collected by Node Exporter running as a separate Docker service.
+
+**Email alerting** — Grafana sends an email notification when any of the following conditions occur:
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| CPU Usage > 90% | Sustained for 2 min | warning |
+| RAM Usage > 85% | Sustained for 2 min | warning |
+| Disk Usage > 80% | Sustained for 5 min | warning |
+| Django Service Down | No response for 1 min | critical |
+
+Alerts repeat every **4 hours** while the problem persists. SMTP settings are taken from `.env` automatically — no extra config needed if email confirmation is already configured.
+
+To change thresholds or recipient address, edit `grafana/provisioning/alerting/rules.yml` and `contact-points.yml`.
 
 ---
 

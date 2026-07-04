@@ -14,6 +14,10 @@ SECRET_KEY=django-insecure-change-me-in-production
 # Set to false in production
 DEBUG=true
 
+# Comma-separated, no spaces. Defaults to localhost,127.0.0.1,0.0.0.0,13.223.155.69,web if unset.
+# deploy.sh sets this automatically on EC2 (detects the instance's public IP).
+# ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com,your-ec2-ip,web
+
 
 # ─── Database ─────────────────────────────────
 # Leave commented out to use SQLite locally.
@@ -58,14 +62,13 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 
 # ─── AWS S3 (optional) ────────────────────────
 # Only needed for storing media files (book covers) in production.
-# Without this, files are stored locally in the media/ folder.
+# Without AWS_STORAGE_BUCKET_NAME set, files are stored locally in the media/ folder.
 #
-# Setup:
-#   1. Create an S3 bucket
-#   2. Disable "Block all public access"
-#   3. Create an IAM user with AmazonS3FullAccess and generate Access Key
+# On the EC2 instance provisioned via Terraform (main.tf) — the instance has an
+# IAM role with S3 access already attached, so AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY
+# can be left unset; only fill them in for local testing against S3.
 #
 # AWS_ACCESS_KEY_ID=AKIA...
 # AWS_SECRET_ACCESS_KEY=...
-# AWS_STORAGE_BUCKET_NAME=online-bookshop-media
-# AWS_S3_REGION_NAME=us-east-1
+AWS_STORAGE_BUCKET_NAME=online-bookshop-media
+AWS_S3_REGION_NAME=us-east-1

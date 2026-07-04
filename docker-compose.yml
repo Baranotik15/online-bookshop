@@ -97,10 +97,19 @@ services:
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"
+      GF_SMTP_USER: "${EMAIL_HOST_USER}"
+      GF_SMTP_PASSWORD: "${EMAIL_HOST_PASSWORD}"
+      GF_SMTP_FROM_ADDRESS: "${EMAIL_HOST_USER}"
+      GF_SMTP_FROM_NAME: "BookShop Monitor"
+      GF_SMTP_STARTTLS_POLICY: "MandatoryStartTLS"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning

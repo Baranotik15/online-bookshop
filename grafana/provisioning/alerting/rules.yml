@@ -1,0 +1,168 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: bookshop-alerts
+    folder: Alerts
+    interval: 1m
+    rules:
+
+      - uid: cpu-high-alert
+        title: "CPU Usage > 90%"
+        condition: B
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        annotations:
+          summary: "High CPU on BookShop host"
+          description: "CPU usage is above 90% for more than 2 minutes."
+        labels:
+          severity: warning
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus-ds
+            model:
+              expr: 100 - (avg(rate(node_cpu_seconds_total{job="node", mode="idle"}[1m])) * 100)
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: "-100"
+            model:
+              type: threshold
+              refId: B
+              expression: A
+              conditions:
+                - evaluator:
+                    params: [90]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+
+      - uid: ram-high-alert
+        title: "RAM Usage > 85%"
+        condition: B
+        for: 2m
+        noDataState: NoData
+        execErrState: Error
+        annotations:
+          summary: "High RAM usage on BookShop host"
+          description: "RAM usage is above 85% for more than 2 minutes."
+        labels:
+          severity: warning
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus-ds
+            model:
+              expr: (1 - (node_memory_MemAvailable_bytes{job="node"} / node_memory_MemTotal_bytes{job="node"})) * 100
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: "-100"
+            model:
+              type: threshold
+              refId: B
+              expression: A
+              conditions:
+                - evaluator:
+                    params: [85]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+
+      - uid: disk-high-alert
+        title: "Disk Usage > 80%"
+        condition: B
+        for: 5m
+        noDataState: NoData
+        execErrState: Error
+        annotations:
+          summary: "Low disk space on BookShop host"
+          description: "Disk usage is above 80%."
+        labels:
+          severity: warning
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus-ds
+            model:
+              expr: (1 - (node_filesystem_avail_bytes{job="node", mountpoint="/", fstype!="tmpfs"} / node_filesystem_size_bytes{job="node", mountpoint="/", fstype!="tmpfs"})) * 100
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: "-100"
+            model:
+              type: threshold
+              refId: B
+              expression: A
+              conditions:
+                - evaluator:
+                    params: [80]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+
+      - uid: django-down-alert
+        title: "Django Service Down"
+        condition: B
+        for: 1m
+        noDataState: Alerting
+        execErrState: Alerting
+        annotations:
+          summary: "Django is not responding"
+          description: "Prometheus cannot scrape Django /metrics for more than 1 minute."
+        labels:
+          severity: critical
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus-ds
+            model:
+              expr: up{job="django"}
+              refId: A
+          - refId: B
+            relativeTimeRange:
+              from: 0
+              to: 0
+            datasourceUid: "-100"
+            model:
+              type: threshold
+              refId: B
+              expression: A
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last

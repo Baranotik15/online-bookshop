@@ -192,6 +192,8 @@ resource "aws_instance" "bookshop" {
     usermod -aG docker ubuntu
     systemctl enable docker
     systemctl start docker
+    echo "${aws_s3_bucket.media.bucket}" > /home/ubuntu/.bookshop-bucket-name
+    chown ubuntu:ubuntu /home/ubuntu/.bookshop-bucket-name
   EOF
 
   tags = {

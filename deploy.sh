@@ -2,19 +2,25 @@
 # One-time (or repeatable) deploy bootstrap for a fresh EC2 instance.
 #
 # Usage:
-#   ./deploy.sh <s3-bucket-name>
+#   ./deploy.sh [s3-bucket-name]
 #
-# The bucket name comes from terraform (run locally, not on the server):
-#   terraform output s3_bucket_name
+# The bucket name is auto-detected from ~/.bookshop-bucket-name (written by
+# terraform's user_data on instance creation). Pass it explicitly only if
+# that file is missing (e.g. an older instance) or you want to override it.
 set -euo pipefail
 
-if [ -z "${1:-}" ]; then
-  echo "Usage: ./deploy.sh <s3-bucket-name>"
+BUCKET_NAME="${1:-}"
+
+if [ -z "$BUCKET_NAME" ] && [ -f "$HOME/.bookshop-bucket-name" ]; then
+  BUCKET_NAME=$(cat "$HOME/.bookshop-bucket-name")
+fi
+
+if [ -z "$BUCKET_NAME" ]; then
+  echo "Usage: ./deploy.sh [s3-bucket-name]"
+  echo "  Could not auto-detect it from ~/.bookshop-bucket-name."
   echo "  Get it with: terraform output s3_bucket_name"
   exit 1
 fi
-
-BUCKET_NAME="$1"
 
 if [ ! -f .env ]; then
   cp env-sample .env
@@ -68,6 +74,10 @@ set_env "AWS_S3_REGION_NAME" "us-east-1"
 set_env "ALLOWED_HOSTS" "${PUBLIC_IP},localhost,127.0.0.1,0.0.0.0,web"
 
 docker compose up --build -d
+
+# staticfiles/ is bind-mounted from the host, which shadows whatever collectstatic
+# produced inside the image at build time — must re-run it once the volume is live.
+docker compose exec -T web python manage.py collectstatic --noinput
 
 if ! command -v nginx &>/dev/null; then
   sudo apt-get update

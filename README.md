@@ -211,10 +211,11 @@ EMAIL_HOST_PASSWORD=your-app-password
 DEFAULT_FROM_EMAIL=BookShop <your@gmail.com>
 ```
 
-**4. Add your domain or IP to `ALLOWED_HOSTS` in `proj/settings.py`:**
-```python
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'your-domain.com', 'your-ec2-ip']
+**4. Add your domain or IP to `.env`** (comma-separated, no spaces):
 ```
+ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com,your-ec2-ip,web
+```
+Defaults to `localhost,127.0.0.1,0.0.0.0,13.223.155.69,web` if unset. If you use [`deploy.sh`](deploy.sh) (see [Terraform](#🏗️-terraform-aws-infrastructure) section), this is set automatically.
 
 **5. Build and start:**
 ```bash
@@ -365,6 +366,39 @@ To tear everything down:
 ```bash
 terraform destroy
 ```
+
+### 🚢 Deploying with `deploy.sh`
+
+[`deploy.sh`](deploy.sh) automates everything after `terraform apply` except the secrets, which only you can provide.
+
+**What it does, in order:**
+1. If `.env` doesn't exist yet — creates it from `env-sample` and stops, asking you to fill in secrets first
+2. Checks that `SECRET_KEY`, `STRIPE_PUBLIC_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` are present in `.env` **and** aren't still the `env-sample` placeholders — if anything's missing or unfilled, it lists what and stops (nothing gets deployed)
+3. Once all of those are filled in, it detects the instance's public IP via EC2 instance metadata, and writes/overwrites `DEBUG=false`, `AWS_STORAGE_BUCKET_NAME`, `AWS_S3_REGION_NAME`, and `ALLOWED_HOSTS` in `.env` — these four are always kept in sync with the current environment, unlike the secrets
+4. Runs `docker compose up --build -d`
+5. Installs nginx if missing, copies `nginx.conf`, enables the site, reloads nginx
+
+**First deploy onto a fresh instance:**
+```bash
+# locally — get the bucket name to paste into the server session below
+terraform output -raw s3_bucket_name
+```
+```bash
+ssh -i bookshop-key.pem ubuntu@<instance_public_ip>
+git clone https://github.com/your-username/online-bookshop.git
+cd online-bookshop
+cp env-sample .env && nano .env   # fill in SECRET_KEY, Stripe keys, email settings — one-time only
+chmod +x deploy.sh
+./deploy.sh <bucket-name-from-above>
+```
+
+**Redeploying later** (after a `git pull` with new code) — same command, safe to re-run:
+```bash
+git pull
+./deploy.sh <bucket-name>
+```
+
+Your filled-in secrets in `.env` are never touched on subsequent runs — only the four environment-specific fields get refreshed.
 
 ---
 
